@@ -13,16 +13,15 @@
                 width: 50%;
                 right: 0;
             }
+            .field-error {
+				color: red;
+			}
         </style>
     </head>
     <body>
-		<div id="toolbar">
-            <button id="create">Create</button>
-        </div>
         <div id="content"></div>
         <div id="map"></div>
-        <div id="footer"></div>
-
+        
         <script type="text/javascript">
 			var settings = {
 				SERVER: "localhost:8000",
@@ -38,7 +37,8 @@
 		<script src="app.js"></script>
         <script type="text/javascript">
             $(function(){
-                App = new AppView;
+                app = new DaybedMapApp;
+                Backbone.history.start();
             });
         </script>
     </body>

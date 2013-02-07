@@ -1,4 +1,4 @@
-var MushroomSpot = Backbone.Model.extend({
+var Item = Backbone.Model.extend({
 
     defaults: function() {
         return {
@@ -20,8 +20,8 @@ var MushroomSpot = Backbone.Model.extend({
     }
 });
 
-var MushroomSpotList = Backbone.Collection.extend({
-    model: MushroomSpot,
+var ItemList = Backbone.Collection.extend({
+    model: Item,
 
 	initialize: function (modelname) {
 		this.modelname = modelname;
@@ -36,10 +36,8 @@ var MushroomSpotList = Backbone.Collection.extend({
     },
 });
 
-var MushroomSpots = new MushroomSpotList;
 
-
-var MushroomSpotRow = Backbone.View.extend({
+var ItemRow = Backbone.View.extend({
 
     tagName: "li",
     template: Mustache.compile('{{ mushroom }}'),
@@ -51,7 +49,7 @@ var MushroomSpotRow = Backbone.View.extend({
 });
 
 
-var MushroomSpotCreate = Backbone.View.extend({
+var AddView = Backbone.View.extend({
 
     tagName: "div",
     template: Mustache.compile('<form><input name="mushroom" type="text" placeholder="Mushroom"/><span id="map-help">Click on map</span><textarea name="area" style="display:none"></textarea><a href="#" id="clear">Cancel</a><button type="submit">Save</button></form>'),
@@ -62,8 +60,9 @@ var MushroomSpotCreate = Backbone.View.extend({
         "click #clear": "formCancelled",
     },
 
-    initialize: function (map) {
+    initialize: function (map, collection) {
         this.map = map;
+        this.collection = collection;
         this.marker = null;
     },
 
@@ -92,7 +91,7 @@ var MushroomSpotCreate = Backbone.View.extend({
         this.$el.find('.field-error').remove();
 
         var data = Backbone.Syphon.serialize(this);
-        MushroomSpots.create(data, {
+        this.collection.create(data, {
             wait: true,
             error: this.showErrors.bind(this),
             success: this.success.bind(this),
@@ -128,7 +127,7 @@ var MushroomSpotCreate = Backbone.View.extend({
 
 
 var DefinitionCreate = Backbone.View.extend({
-	template: Mustache.compile('<h2>Create definition of "{{ modelname }}"</h2><form><textarea>{"title":"mushroomspots","description":"mushroom spots", "fields": [{"name":"mushroom","type":"string","description":"what"},{"name":"area","type":"point","description":"where"}]}</textarea><button id="create">Create</button></form>'),
+	template: Mustache.compile('<h2>Create model "{{ modelname }}"</h2><form><textarea>{"title":"mushroomspots","description":"mushroom spots", "fields": [{"name":"mushroom","type":"string","description":"what"},{"name":"area","type":"point","description":"where"}]}</textarea><button id="create">Create</button></form>'),
 
     events: {
         "click button#create": "formSubmitted",
@@ -153,7 +152,7 @@ var DefinitionCreate = Backbone.View.extend({
 		  data: definition,
 		  contentType: 'application/json',
 		  dataType: 'json',
-		  success: this.success,
+		  success: this.success.bind(this),
 		});
         return false;
     },
@@ -168,31 +167,22 @@ var ListView = Backbone.View.extend({
 	template: Mustache.compile('<h1>{{ modelname }}</h1><div id="toolbar"><a href="#{{ modelname }}/add">Add</a></div>' + 
 	                           '<div id="list"></div><div id="footer">{{ count }} items.</div>'),
 
-    initialize: function (map, modelname) {
+    initialize: function (map, collection) {
 		this.map = map;
-		this.modelname = modelname;
+		this.collection = collection;
 
-		MushroomSpots.modelname = modelname; // beurk
-        MushroomSpots.bind('add', this.addOne, this);
-        MushroomSpots.bind('reset', this.addAll, this);
-        MushroomSpots.bind('error', this.handleError, this);
-        MushroomSpots.fetch();
-    },
-
-    handleError: function(model, xhr, options) {
-        if (xhr.status == 404) {
-            app.navigate(this.modelname + '/create', {trigger:true});
-        }
+        collection.bind('add', this.addOne, this);
+        collection.bind('reset', this.addAll, this);
     },
 
     render: function () {
-		var count = MushroomSpots.length;
-        this.$el.html(this.template({modelname: this.modelname, count:count}));
+		var count = this.collection.length;
+        this.$el.html(this.template({modelname: this.collection.modelname, count:count}));
         return this;
     },
 
     addOne: function (spot) {
-        var view = new MushroomSpotRow({model: spot});
+        var view = new ItemRow({model: spot});
         this.$('#list').append(view.render().el);
         var geom = spot.geometry();
         geom.addTo(this.map);
@@ -202,7 +192,7 @@ var ListView = Backbone.View.extend({
     addAll: function () {
 		this.render();
 		this.bounds = new L.LatLngBounds();
-        MushroomSpots.each(this.addOne.bind(this));
+        this.collection.each(this.addOne.bind(this));
         if (this.bounds.isValid()) this.map.fitBounds(this.bounds);
     }
 });
@@ -217,6 +207,8 @@ var DaybedMapApp = Backbone.Router.extend({
 	},
 
 	initialize: function () {
+		this.collection = null;
+		
         this.map = L.map('map').setView([0, 0], 3);
         this.map.attributionControl.setPrefix(''); 
         L.tileLayer('http://{s}.tiles.mapbox.com//v3/leplatrem.map-3jyuq4he/{z}/{x}/{y}.png').addTo(this.map);
@@ -227,10 +219,22 @@ var DaybedMapApp = Backbone.Router.extend({
 	},
 
 	list: function(modelname) {
-		$("#content").html(new ListView(this.map, modelname).render().el);
+		if (!this.collection || this.collection.modelname != modelname) {
+			this.collection = new ItemList(modelname);
+			var createIfMissing = function (model, xhr) {
+				if (xhr.status == 404) {
+					app.navigate(modelname + '/create', {trigger:true});
+				}
+			};
+			this.collection.bind('error', createIfMissing, this);
+		}
+		$("#content").html(new ListView(this.map, this.collection).render().el);
+		this.collection.fetch();
 	},
 
 	add: function(modelname) {
-		$("#content #list").prepend(new MushroomSpotCreate(this.map).render().el);
+		if (!this.collection|| this.collection.modelname != modelname)
+			this.list(modelname);
+		$("#content #list").prepend(new AddView(this.map, this.collection).render().el);
 	}
 });

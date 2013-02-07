@@ -48,17 +48,51 @@ var ItemRow = Backbone.View.extend({
     }
 });
 
-
-var AddView = Backbone.View.extend({
-
-    tagName: "div",
-    template: Mustache.compile('<form><input name="mushroom" type="text" placeholder="Mushroom"/><span id="map-help">Click on map</span><textarea name="area" style="display:none"></textarea><a href="#" id="clear">Cancel</a><button type="submit">Save</button></form>'),
-    templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
-
+var FormView = Backbone.View.extend({
+	templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
+    
     events: {
         "submit form": "formSubmitted",
         "click #clear": "formCancelled",
     },
+
+    render: function () {
+		this.$el.html(this.template(this));
+        this.delegateEvents();
+        return this;
+    },
+
+    formCancelled: function (e) {
+        e.preventDefault();
+        return false;
+    },
+
+    formSubmitted: function(e) {
+        e.preventDefault();
+        this.$el.find('.field-error').remove();
+        this.data = Backbone.Syphon.serialize(this);
+        return false;
+    },
+
+    showErrors: function (model, xhr, options) {
+        try {
+			var descriptions = JSON.parse(xhr.responseText),
+				self = this;
+			$(descriptions.errors).each(function (i, e) {
+				self.$el.find("[name='" + e.name + "']")
+					.after(self.templateError({msg: e.description}));
+			});
+		}
+		catch (e) {
+			this.$el.html(this.templateError({msg: xhr.responseText}));
+		}
+    },
+});
+
+var AddView = FormView.extend({
+
+    tagName: "div",
+    template: Mustache.compile('<form><input name="mushroom" type="text" placeholder="Mushroom"/><span id="map-help">Click on map</span><textarea name="area" style="display:none"></textarea><a href="#" id="clear">Cancel</a><button type="submit">Save</button></form>'),
 
     initialize: function (map, collection) {
         this.map = map;
@@ -81,17 +115,14 @@ var AddView = Backbone.View.extend({
     },
 
     formCancelled: function (e) {
-        e.preventDefault();
+		FormView.prototype.formCancelled.apply(this, arguments);
         this.close();
         return false;
     },
 
     formSubmitted: function(e) {
-        e.preventDefault();
-        this.$el.find('.field-error').remove();
-
-        var data = Backbone.Syphon.serialize(this);
-        this.collection.create(data, {
+		FormView.prototype.formSubmitted.apply(this, arguments);
+        this.collection.create(this.data, {
             wait: true,
             error: this.showErrors.bind(this),
             success: this.success.bind(this),
@@ -109,51 +140,37 @@ var AddView = Backbone.View.extend({
     success: function (model, response, options) {
         this.close();
     },
-
-    showErrors: function (model, xhr, options) {
-        try {
-			var descriptions = JSON.parse(xhr.responseText),
-				self = this;
-			$(descriptions.errors).each(function (i, e) {
-				self.$el.find("[name='" + e.name + "']")
-					.after(self.templateError({msg: e.description}));
-			});
-		}
-		catch (e) {
-			this.$el.html(this.templateError({msg: xhr.responseText}));
-		}
-    },
 });
 
 
-var DefinitionCreate = Backbone.View.extend({
-	template: Mustache.compile('<h2>Create model "{{ modelname }}"</h2><form><textarea>{"title":"mushroomspots","description":"mushroom spots", "fields": [{"name":"mushroom","type":"string","description":"what"},{"name":"area","type":"point","description":"where"}]}</textarea><button id="create">Create</button></form>'),
+var Model = Backbone.Model.extend({
+    url: function () {
+		return URI.build({hostname:settings.SERVER, path: 'definitions/' + this.id});
+	},
+});
 
-    events: {
-        "click button#create": "formSubmitted",
-    },
+
+var ModelCreate = FormView.extend({
+	template: Mustache.compile('<h2>Create model "{{ modelname }}"</h2><form>' +
+							   '<input type="hidden" name="id" value="{{ modelname }}"/>' +
+	                           '<input type="text" name="title" placeholder="title"/>' +
+	                           '<input type="text" name="description" placeholder="description"/>' +
+	                           '<textarea name="fields[]">{"name":"mushroom","type":"string","description":"what"}</textarea>' +
+	                           '<textarea name="fields[]">{"name":"area","type":"point","description":"where"}</textarea>' +
+	                           '<button type="submit">Create</button></form>'),
 
 	initialize: function (modelname) {
 		this.modelname = modelname;
 	},
 
-    render: function () {
-		this.$el.html(this.template({modelname: this.modelname}));
-        this.delegateEvents();
-        return this;
-    },
-
     formSubmitted: function(e) {
-        e.preventDefault();
-        var definition = this.$el.find('textarea').val();
-        $.ajax({
-		  type: "PUT",
-		  url: URI.build({hostname:settings.SERVER, path: 'definitions/' + this.modelname}),
-		  data: definition,
-		  contentType: 'application/json',
-		  dataType: 'json',
-		  success: this.success.bind(this),
-		});
+        FormView.prototype.formSubmitted.apply(this, arguments);
+        // So far fields are textarea with JSON inside...
+        for (i in this.data.fields) this.data.fields[i] = JSON.parse(this.data.fields[i]);
+        var model = new Model(this.data);
+        model.on('sync', this.success.bind(this));
+        model.on('error', this.showErrors.bind(this));
+        model.save({wait: true});
         return false;
     },
 
@@ -215,7 +232,7 @@ var DaybedMapApp = Backbone.Router.extend({
 	},
 
 	create: function(modelname) {
-		$("#content").html(new DefinitionCreate(modelname).render().el);
+		$("#content").html(new ModelCreate(modelname).render().el);
 	},
 
 	list: function(modelname) {

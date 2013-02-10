@@ -48,12 +48,13 @@ var ItemRow = Backbone.View.extend({
     }
 });
 
+
 var FormView = Backbone.View.extend({
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
     
     events: {
-        "submit form": "formSubmitted",
-        "click #clear": "formCancelled",
+        "click #submit": "submit",
+        "click #cancel": "cancel",
     },
 
     render: function () {
@@ -62,15 +63,14 @@ var FormView = Backbone.View.extend({
         return this;
     },
 
-    formCancelled: function (e) {
+    cancel: function (e) {
         e.preventDefault();
         return false;
     },
 
-    formSubmitted: function(e) {
+    submit: function(e) {
         e.preventDefault();
         this.$el.find('.field-error').remove();
-        this.data = Backbone.Syphon.serialize(this);
         return false;
     },
 
@@ -87,12 +87,17 @@ var FormView = Backbone.View.extend({
             this.$el.html(this.templateError({msg: xhr.responseText}));
         }
     },
+
+    success: function (model, response, options) {
+        return false;
+    },
 });
+
 
 var AddView = FormView.extend({
 
     tagName: "div",
-    template: Mustache.compile('<form><input name="mushroom" type="text" placeholder="Mushroom"/><span id="map-help">Click on map</span><textarea name="area" style="display:none"></textarea><a href="#" id="clear">Cancel</a><button type="submit">Save</button></form>'),
+    template: Mustache.compile('<form><input name="mushroom" type="text" placeholder="Mushroom"/><span id="map-help">Click on map</span><textarea name="area" style="display:none"></textarea><a href="#" id="cancel">Cancel</a><button id="submit">Save</button></form>'),
 
     initialize: function (map, collection) {
         this.map = map;
@@ -101,8 +106,7 @@ var AddView = FormView.extend({
     },
 
     render: function () {
-        this.$el.html(this.template({}));
-        this.delegateEvents();
+        FormView.prototype.render.apply(this, arguments);
         this.map.on('click', this.onMapClick.bind(this));
         return this;
     },
@@ -114,15 +118,15 @@ var AddView = FormView.extend({
         return false;
     },
 
-    formCancelled: function (e) {
-        FormView.prototype.formCancelled.apply(this, arguments);
+    cancel: function (e) {
+        FormView.prototype.cancel.apply(this, arguments);
         this.close();
         return false;
     },
 
-    formSubmitted: function(e) {
-        FormView.prototype.formSubmitted.apply(this, arguments);
-        this.collection.create(this.data, {
+    submit: function(e) {
+        var data = Backbone.Syphon.serialize(this);
+        this.collection.create(data, {
             wait: true,
             error: this.showErrors.bind(this),
             success: this.success.bind(this),
@@ -147,36 +151,55 @@ var Model = Backbone.Model.extend({
     url: function () {
         return URI.build({hostname:settings.SERVER, path: 'definitions/' + this.id});
     },
+
+    schema: {
+        id:  { type: 'Hidden', title: '' },
+        title: 'Text',
+        description: 'Text',
+        fields: { type: 'List', itemType: 'Object', subSchema: {
+            name: { validators: ['required'] },
+            description: { validators: ['required'] },
+            type: { type: 'Select', options: ['int', 'string', 'decimal', 'boolean',
+                                              'email', 'url', 'point'] }
+        }}
+    }
 });
 
 
 var ModelCreate = FormView.extend({
-    template: Mustache.compile('<h2>Create model "{{ modelname }}"</h2><form>' +
-                               '<input type="hidden" name="id" value="{{ modelname }}"/>' +
-                               '<input type="text" name="title" placeholder="title"/>' +
-                               '<input type="text" name="description" placeholder="description"/>' +
-                               '<textarea name="fields[]">{"name":"mushroom","type":"string","description":"what"}</textarea>' +
-                               '<textarea name="fields[]">{"name":"area","type":"point","description":"where"}</textarea>' +
-                               '<button type="submit">Create</button></form>'),
+    template: Mustache.compile('<h2>Create model "{{ modelname }}"</h2>' +
+                               '<div id="form"></div>' +
+                               '<a id="submit" class="btn">Create</button>'),
 
     initialize: function (modelname) {
         this.modelname = modelname;
+        this.instance = new Model({id: modelname,
+                                    title: modelname,
+                                    description: modelname});
+        this.instance.on('sync', this.success.bind(this));
+        this.instance.on('error', this.showErrors.bind(this));
+        this.form = new Backbone.Form({
+            model: this.instance
+        });
+        return this;
     },
 
-    formSubmitted: function(e) {
-        FormView.prototype.formSubmitted.apply(this, arguments);
-        // So far fields are textarea with JSON inside...
-        for (i in this.data.fields) this.data.fields[i] = JSON.parse(this.data.fields[i]);
-        var model = new Model(this.data);
-        model.on('sync', this.success.bind(this));
-        model.on('error', this.showErrors.bind(this));
-        model.save({wait: true});
+    render: function () {
+        FormView.prototype.render.apply(this, arguments);
+        this.$('#form').html(this.form.render().el);
+        return this;
+    },
+
+    submit: function() {
+        FormView.prototype.submit.apply(this, arguments);
+        this.form.commit();
+        this.instance.save({wait: true});
         return false;
     },
-
+    
     success: function () {
         app.navigate(this.modelname + '/list', {trigger:true});
-    },
+    }
 });
 
 

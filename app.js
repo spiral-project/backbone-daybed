@@ -147,7 +147,7 @@ var AddView = FormView.extend({
 });
 
 
-var Model = Backbone.Model.extend({
+var Definition = Backbone.Model.extend({
     url: function () {
         return URI.build({hostname:settings.SERVER, path: 'definitions/' + this.id});
     },
@@ -166,16 +166,16 @@ var Model = Backbone.Model.extend({
 });
 
 
-var ModelCreate = FormView.extend({
-    template: Mustache.compile('<h2>Create model "{{ modelname }}"</h2>' +
+var DefinitionCreate = FormView.extend({
+    template: Mustache.compile('<h2>Create "{{ modelname }}"</h2>' +
                                '<div id="form"></div>' +
                                '<a id="submit" class="btn">Create</button>'),
 
     initialize: function (modelname) {
         this.modelname = modelname;
-        this.instance = new Model({id: modelname,
-                                    title: modelname,
-                                    description: modelname});
+        this.instance = new Definition({id: modelname,
+                                        title: modelname,
+                                        description: modelname});
         this.instance.on('sync', this.success.bind(this));
         this.instance.on('error', this.showErrors.bind(this));
         this.form = new Backbone.Form({
@@ -289,7 +289,7 @@ var DaybedMapApp = Backbone.Router.extend({
     },
 
     create: function(modelname) {
-        $("#content").html(new ModelCreate(modelname).render().el);
+        $("#content").html(new DefinitionCreate(modelname).render().el);
     },
 
     list: function(modelname) {

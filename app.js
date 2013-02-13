@@ -58,16 +58,21 @@ var FormView = Backbone.View.extend({
 var AddView = FormView.extend({
 
     tagName: "div",
-    template: Mustache.compile('<form><input name="mushroom" type="text" placeholder="Mushroom"/><span id="map-help">Click on map</span><textarea name="area" style="display:none"></textarea><a href="#" id="cancel">Cancel</a><button id="submit">Save</button></form>'),
+    template: Mustache.compile('<a href="#" id="cancel">Cancel</a><button id="submit">Save</button>'),
 
     initialize: function (map, collection) {
         this.map = map;
         this.collection = collection;
+        this.form = null;
         this.marker = null;
     },
 
     render: function () {
         FormView.prototype.render.apply(this, arguments);
+        this.form = new Backbone.Form({
+            schema: this.collection.definition.itemSchema()
+        })
+        this.$el.prepend(this.form.render().el);
         this.map.on('click', this.onMapClick.bind(this));
         return this;
     },
@@ -86,7 +91,7 @@ var AddView = FormView.extend({
     },
 
     submit: function(e) {
-        var data = Backbone.Syphon.serialize(this);
+        var data = this.form.getValue();
         this.collection.create(data, {
             wait: true,
             error: this.showErrors.bind(this),

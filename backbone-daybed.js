@@ -1,18 +1,4 @@
 var Item = Backbone.Model.extend({
-
-    defaults: function() {
-        return {
-            mushroom: "Unknown",
-            area: [0.0, 0.0]
-        };
-    },
-
-    initialize: function() {
-        if (!this.get("mushroom")) {
-            this.set({"mushroom": this.defaults.mushroom});
-        }
-    },
-
     geometry: function () {
         var area = JSON.parse(this.get('area'));
         return L.circleMarker([area[1], area[0]], {fillColor: 'green'})
@@ -25,11 +11,11 @@ var ItemList = Backbone.Collection.extend({
     model: Item,
 
     initialize: function (definition) {
-        this.modelname = definition.id;
+        this.definition = definition;
     },
 
     url: function () {
-        return URI.build({hostname:settings.SERVER, path: '/data/' + this.modelname});
+        return URI.build({hostname:settings.SERVER, path: '/data/' + this.definition.id});
     },
 
     parse: function(response) {
@@ -53,5 +39,26 @@ var Definition = Backbone.Model.extend({
             type: { type: 'Select', options: ['int', 'string', 'decimal', 'boolean',
                                               'email', 'url', 'point'] }
         }}
+    },
+
+    itemSchema: function () {
+        if (!this.attributes.fields)
+            throw "Definition is not ready. Fetch it first.";
+
+        var fieldMapping = {
+            'string': function (f) {return {type: 'Text', help: f.description}; },
+            'point': function (f) {
+                return {type: 'TextArea', 
+                        editorAttrs: {style: 'display: none'}, 
+                        help: f.description + ' <span id="map-help">Click on map</span>'};
+            },
+        };
+        var self = this
+          , schema = {};
+        $(this.attributes.fields).each(function (i, field) {
+            var build = fieldMapping[field.type];
+            if (build) schema[field.name] = build(field);
+        });
+        return schema;
     }
 });

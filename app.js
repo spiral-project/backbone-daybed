@@ -198,7 +198,7 @@ var ModelCreate = FormView.extend({
     },
     
     success: function () {
-        app.navigate(this.modelname + '/list', {trigger:true});
+        app.navigate(this.modelname, {trigger:true});
     }
 });
 
@@ -249,11 +249,31 @@ var ListView = Backbone.View.extend({
 });
 
 
+
+var HomeView = Backbone.View.extend({
+    template: Mustache.compile('<h1>Daybed Map</h1><input id="modelname" placeholder="Name"/><a href="#" class="btn">Go</a>'),
+
+    events: {
+        "keyup input#modelname": "setLink",
+    },
+
+    render: function () {
+        this.$el.html(this.template({}));
+        return this;
+    },
+
+    setLink: function (e) {
+        this.$el.find("a").attr("href", '#' + $(e.target).val());
+    }
+});
+
+
 var DaybedMapApp = Backbone.Router.extend({
 
     routes: {
+        "":                    "home",
         ":modelname/create":   "create",
-        ":modelname/list":     "list",
+        ":modelname":          "list",
     },
 
     initialize: function () {
@@ -262,6 +282,10 @@ var DaybedMapApp = Backbone.Router.extend({
         this.map = L.map('map').setView([0, 0], 3);
         this.map.attributionControl.setPrefix(''); 
         L.tileLayer('http://{s}.tiles.mapbox.com//v3/leplatrem.map-3jyuq4he/{z}/{x}/{y}.png').addTo(this.map);
+    },
+
+    home: function() {
+        $("#content").html(new HomeView().render().el);
     },
 
     create: function(modelname) {

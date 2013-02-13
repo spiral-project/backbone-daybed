@@ -23,8 +23,8 @@ var Item = Backbone.Model.extend({
 var ItemList = Backbone.Collection.extend({
     model: Item,
 
-    initialize: function (modelname) {
-        this.modelname = modelname;
+    initialize: function (definition) {
+        this.modelname = definition.id;
     },
 
     url: function () {
@@ -204,26 +204,28 @@ var DefinitionCreate = FormView.extend({
 
 
 var ListView = Backbone.View.extend({
-    template: Mustache.compile('<h1>{{ modelname }}</h1><div id="toolbar"><a id="add">Add</a></div>' + 
+    template: Mustache.compile('<h1>{{ definition.title }}</h1><p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
                                '<div id="list"></div><div id="footer">{{ count }} items.</div>'),
 
     events: {
         "click a#add": "addForm",
     },
 
-    initialize: function (map, collection) {
+    initialize: function (map, definition) {
         this.map = map;
-        this.collection = collection;
+        this.definition = definition;
 
-        collection.bind('add', this.addOne, this);
-        collection.bind('reset', this.addAll, this);
+        this.collection = new ItemList(definition);
+        this.collection.bind('add', this.addOne, this);
+        this.collection.bind('reset', this.addAll, this);
+        this.collection.fetch();
 
-        this.addView = new AddView(map, collection);
+        this.addView = new AddView(map, this.collection);
     },
 
     render: function () {
         var count = this.collection.length;
-        this.$el.html(this.template({modelname: this.collection.modelname, count:count}));
+        this.$el.html(this.template({definition: this.definition.attributes, count:count}));
         return this;
     },
 
@@ -277,7 +279,7 @@ var DaybedMapApp = Backbone.Router.extend({
     },
 
     initialize: function () {
-        this.collection = null;
+        this.definition = null;
         
         this.map = L.map('map').setView([0, 0], 3);
         this.map.attributionControl.setPrefix(''); 
@@ -293,16 +295,15 @@ var DaybedMapApp = Backbone.Router.extend({
     },
 
     list: function(modelname) {
-        if (!this.collection || this.collection.modelname != modelname) {
-            this.collection = new ItemList(modelname);
+        if (!this.definition || this.definition.modelname != modelname) {
+            this.definition = new Definition({id: modelname});
             var createIfMissing = function (model, xhr) {
                 if (xhr.status == 404) {
                     app.navigate(modelname + '/create', {trigger:true});
                 }
             };
-            this.collection.bind('error', createIfMissing, this);
+            this.definition.fetch({error: createIfMissing});
         }
-        $("#content").html(new ListView(this.map, this.collection).render().el);
-        this.collection.fetch();
+        $("#content").html(new ListView(this.map, this.definition).render().el);
     },
 });

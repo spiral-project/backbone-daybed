@@ -51,7 +51,7 @@ var ItemRow = Backbone.View.extend({
 
 var FormView = Backbone.View.extend({
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
-    
+
     events: {
         "click #submit": "submit",
         "click #cancel": "cancel",
@@ -204,8 +204,12 @@ var ModelCreate = FormView.extend({
 
 
 var ListView = Backbone.View.extend({
-    template: Mustache.compile('<h1>{{ modelname }}</h1><div id="toolbar"><a href="#{{ modelname }}/add">Add</a></div>' + 
+    template: Mustache.compile('<h1>{{ modelname }}</h1><div id="toolbar"><a id="add">Add</a></div>' + 
                                '<div id="list"></div><div id="footer">{{ count }} items.</div>'),
+
+    events: {
+        "click a#add": "addForm",
+    },
 
     initialize: function (map, collection) {
         this.map = map;
@@ -213,12 +217,19 @@ var ListView = Backbone.View.extend({
 
         collection.bind('add', this.addOne, this);
         collection.bind('reset', this.addAll, this);
+
+        this.addView = new AddView(map, collection);
     },
 
     render: function () {
         var count = this.collection.length;
         this.$el.html(this.template({modelname: this.collection.modelname, count:count}));
         return this;
+    },
+
+    addForm: function (e) {
+        e.preventDefault();
+        this.$el.find("#list").prepend(this.addView.render().el);
     },
 
     addOne: function (spot) {
@@ -243,7 +254,6 @@ var DaybedMapApp = Backbone.Router.extend({
     routes: {
         ":modelname/create":   "create",
         ":modelname/list":     "list",
-        ":modelname/add":      "add",
     },
 
     initialize: function () {
@@ -271,10 +281,4 @@ var DaybedMapApp = Backbone.Router.extend({
         $("#content").html(new ListView(this.map, this.collection).render().el);
         this.collection.fetch();
     },
-
-    add: function(modelname) {
-        if (!this.collection|| this.collection.modelname != modelname)
-            this.list(modelname);
-        $("#content #list").prepend(new AddView(this.map, this.collection).render().el);
-    }
 });

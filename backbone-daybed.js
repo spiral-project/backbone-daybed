@@ -44,20 +44,42 @@ var Definition = Backbone.Model.extend({
     itemSchema: function () {
         if (!this.attributes.fields)
             throw "Definition is not ready. Fetch it first.";
-
+        var typeMapping = {
+            'int': 'Number',
+            'string': 'Text',
+            'boolean': 'Checkbox'
+        }
         var fieldMapping = {
-            'string': function (f) {return {type: 'Text', help: f.description}; },
+            'default': function (f) {
+                var d = {help: f.description}
+                  , t = typeMapping[f.type];
+                if (t) d.type = t;
+                return d;
+            },
+            'decimal': function (f, d) {
+                d.editorAttrs = {pattern: '[-+]?[0-9]*\.?[0-9]+'};
+                return d;
+            },
+            'email': function (f, d) {
+                d.validators = ['required', 'email'];
+                return d;
+            },
+            'url': function (f, d) {
+                d.validators = ['required', 'url'];
+                return d;
+            },
             'point': function (f) {
                 return {type: 'TextArea', 
-                        editorAttrs: {style: 'display: none'}, 
+                        editorAttrs: {style: 'display: none'},
                         help: f.description + ' <span id="map-help">Click on map</span>'};
             },
         };
         var self = this
           , schema = {};
         $(this.attributes.fields).each(function (i, field) {
-            var build = fieldMapping[field.type];
-            if (build) schema[field.name] = build(field);
+            var defaultschema = fieldMapping['default']
+              , build = fieldMapping[field.type] || defaultschema;
+            if (build) schema[field.name] = build(field, defaultschema(field));
         });
         return schema;
     }

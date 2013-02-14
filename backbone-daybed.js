@@ -160,3 +160,67 @@ var Definition = Backbone.Model.extend({
         return Mustache.compile(c);
     },
 });
+
+
+var FormView = Backbone.View.extend({
+    model: null,
+    tagName: "div",
+    template: Mustache.compile('<h2>{{ title }}</h2>' +
+                               '<div id="form"></div>' +
+                               '<a id="cancel">Cancel</a>' +
+                               '<a id="submit" class="btn">Save</a>'),
+    templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
+
+    events: {
+        "click #submit": "submit",
+        "click #cancel": "cancel",
+    },
+
+    initialize: function () {
+        this.instance = new this.model({});
+        if (!this.instance.schema && this.options.definition)
+            this.instance.schema = this.options.definition.itemSchema();
+        this.instance.on('sync', this.success.bind(this));
+        this.instance.on('error', this.showErrors.bind(this));
+        this.form = new Backbone.Form({
+            model: this.instance
+        });
+    },
+
+    render: function () {
+        this.$el.html(this.template(this));
+        this.$('#form').html(this.form.render().el);
+        this.delegateEvents();
+        return this;
+    },
+
+    cancel: function (e) {
+        e.preventDefault();
+        return false;
+    },
+
+    submit: function(e) {
+        e.preventDefault();
+        this.$el.find('.field-error').remove();
+        this.form.commit();
+        return false;
+    },
+
+    success: function (model, response, options) {
+        return false;
+    },
+
+    showErrors: function (model, xhr, options) {
+        try {
+            var descriptions = JSON.parse(xhr.responseText),
+                self = this;
+            $(descriptions.errors).each(function (i, e) {
+                self.$el.find("[name='" + e.name + "']")
+                    .after(self.templateError({msg: e.description}));
+            });
+        }
+        catch (e) {
+            this.$el.html(this.templateError({msg: xhr.responseText}));
+        }
+    },
+});

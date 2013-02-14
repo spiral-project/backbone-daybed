@@ -1,8 +1,17 @@
 var Item = Backbone.Model.extend({
+    popup: function () {
+        var tpl = this.definition.templatePopup();
+        return tpl(this.attributes);
+    },
+
     geometry: function () {
-        var area = JSON.parse(this.get('area'));
-        return L.circleMarker([area[1], area[0]], {fillColor: 'green'})
-                .bindPopup(this.get('mushroom'));
+        var geomfield = this.definition.geomField();
+        if (!geomfield) {
+            return;
+        }
+        var geom = JSON.parse(this.get(geomfield));
+        return L.circleMarker([geom[1], geom[0]], {fillColor: 'green'})
+                .bindPopup(this.popup());
     }
 });
 
@@ -20,6 +29,15 @@ var ItemList = Backbone.Collection.extend({
 
     parse: function(response) {
         return response.data;
+    },
+
+    /**
+     * Override instanciation to link with Definition instance.
+     */
+    _prepareModel: function() {
+        var m = Backbone.Collection.prototype._prepareModel.apply(this, arguments);
+        m.definition = this.definition;
+        return m;
     },
 });
 
@@ -82,5 +100,26 @@ var Definition = Backbone.Model.extend({
             if (build) schema[field.name] = build(field, defaultschema(field));
         });
         return schema;
-    }
+    },
+
+    geomField: function () {
+        for (i in this.attributes.fields) {
+            var f = this.attributes.fields[i];
+            if (f.type == 'point')
+                return f.name;
+        }
+        return null;
+    },
+
+    templatePopup: function () {
+        var c = '<div>';
+        for (i in this.attributes.fields) {
+            var f = this.attributes.fields[i];
+            if (f.type == 'point')
+                continue;
+            c += '<p>{{ ' + f.name + ' }}</p>'
+        }
+        c += '</div>';
+        return Mustache.compile(c);
+    },
 });

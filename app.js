@@ -103,8 +103,9 @@ var AddView = FormView.extend({
     onMapClick: function (e) {
         this.marker = L.marker(e.latlng).addTo(this.map);
         this.$el.find('#map-help').remove();
-        var lnglat = [e.latlng.lng, e.latlng.lat];
-        this.$el.find('[name=area]').val(JSON.stringify(lnglat));
+        var lnglat = [e.latlng.lng, e.latlng.lat]
+          , geomfield = this.collection.definition.geomField();
+        this.$el.find('[name='+ geomfield + ']').val(JSON.stringify(lnglat));
     },
 
     success: function (model, response, options) {

@@ -44,6 +44,7 @@ var AddView = FormView.extend({
 
     close: function (e) {
         if (this.marker) this.map.removeLayer(this.marker);
+        this.marker = null;
         this.map.off('click');
         this.remove();
         return false;
@@ -63,7 +64,10 @@ var AddView = FormView.extend({
     },
 
     onMapClick: function (e) {
-        this.marker = L.marker(e.latlng).addTo(this.map);
+        if (!this.marker)
+            this.marker = L.marker(e.latlng).addTo(this.map);
+        else
+            this.marker.setLatLng(e.latlng);
         this.$el.find('#map-help').remove();
         this.instance.setLayer(this.marker);
     },

@@ -11,14 +11,18 @@ var Item = Backbone.Model.extend({
         return tpl(this.toJSON());
     },
 
-    layer: function () {
-        var geomfield = this.definition.geomField();
-        if (!geomfield) {
-            return;
+    getLayer: function () {
+        if (!this.layer) {
+
+            var geomfield = this.definition.geomField();
+            if (!geomfield) {
+                return;
+            }
+            var geom = JSON.parse(this.get(geomfield));
+            this.layer = L.circleMarker([geom[1], geom[0]], {fillColor: 'green'})
+                          .bindPopup(this.popup());
         }
-        var geom = JSON.parse(this.get(geomfield));
-        return L.circleMarker([geom[1], geom[0]], {fillColor: 'green'})
-                .bindPopup(this.popup());
+        return this.layer;
     },
 
     setLayer: function (layer) {
@@ -31,6 +35,16 @@ var Item = Backbone.Model.extend({
         attrs[geomfield] = JSON.stringify(lnglat);
         this.set(attrs);
     },
+
+    highlight: function (state) {
+        if (!this.layer) return;
+        if (state) {
+            this.layer.setStyle({fillColor: 'yellow'});
+        }
+        else {
+            this.layer.setStyle({fillColor: 'green'});
+        }
+    }
 });
 
 
@@ -170,7 +184,7 @@ var Definition = Backbone.Model.extend({
     },
 
     templateRow: function () {
-        var c = '<tr>';
+        var c = '<tr data-id="{{ id }}">';
         $(this.mainFields()).each(function (i, f) {
             c += '<td>{{ ' + f.name + ' }}</td>'
         });

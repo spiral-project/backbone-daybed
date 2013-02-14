@@ -60,7 +60,7 @@ var AddView = FormView.extend({
 
     submit: function(e) {
         FormView.prototype.submit.apply(this, arguments);
-        this.collection.create(this.instance);
+        this.collection.create(this.instance, {wait: true});
     },
 
     onMapClick: function (e) {
@@ -110,15 +110,26 @@ var ListView = Backbone.View.extend({
 
     addOne: function (item) {
         var tpl = this.definition.templateRow();
-        this.$('table tbody').append(tpl(item.toJSON()))
-            .css("opacity", "0.1")
-            .animate({opacity: 1.0}, 1000);
+        this.$('table tbody').prepend(tpl(item.toJSON()));
 
-        var geom = item.layer();
+        var geom = item.getLayer();
         if (geom) {
             geom.addTo(this.map);
             this.bounds.extend(geom.getLatLng());
         }
+
+        // Row and map items highlighting
+        this.$('table tbody tr').first()
+        .hover(function () {
+            $(this).addClass('success');
+            item.highlight(true);
+        },
+        function () {
+            $(this).removeClass('success');
+            item.highlight(false);
+        })
+        .css("opacity", "0.1")
+        .animate({opacity: 1.0}, 1000);
     },
 
     addAll: function () {
@@ -126,6 +137,11 @@ var ListView = Backbone.View.extend({
         this.bounds = new L.LatLngBounds();
         this.collection.each(this.addOne.bind(this));
         if (this.bounds.isValid()) this.map.fitBounds(this.bounds);
+    },
+
+    highlight: function (e) {
+        var i = this.collection.get(e.data('id'));
+        i.highlight();
     },
 });
 

@@ -90,10 +90,6 @@ var ListView = Backbone.View.extend({
         this.collection.bind('add', this.addOne, this);
         this.collection.bind('reset', this.addAll, this);
         this.collection.fetch();
-
-        this.addView = new AddView({map:map,
-                                    definition:this.definition,
-                                    collection:this.collection});
     },
 
     render: function () {
@@ -105,6 +101,10 @@ var ListView = Backbone.View.extend({
 
     addForm: function (e) {
         e.preventDefault();
+
+        this.addView = new AddView({map:this.map,
+                                    definition:this.definition,
+                                    collection:this.collection});
         this.$el.find("#list").prepend(this.addView.render().el);
     },
 

@@ -4,7 +4,7 @@ var Item = Backbone.Model.extend({
         return tpl(this.toJSON());
     },
 
-    geometry: function () {
+    layer: function () {
         var geomfield = this.definition.geomField();
         if (!geomfield) {
             return;
@@ -12,7 +12,18 @@ var Item = Backbone.Model.extend({
         var geom = JSON.parse(this.get(geomfield));
         return L.circleMarker([geom[1], geom[0]], {fillColor: 'green'})
                 .bindPopup(this.popup());
-    }
+    },
+
+    setLayer: function (layer) {
+        var geomfield = this.definition.geomField();
+        if (!geomfield) {
+            return;
+        }
+        var lnglat = [layer.getLatLng().lng, layer.getLatLng().lat]
+          , attrs = {};
+        attrs[geomfield] = JSON.stringify(lnglat);
+        this.set(attrs);
+    },
 });
 
 
@@ -178,8 +189,11 @@ var FormView = Backbone.View.extend({
 
     initialize: function () {
         this.instance = new this.model({});
-        if (!this.instance.schema && this.options.definition)
+        if (!this.instance.schema && this.options.definition) {
+            this.instance.definition = this.options.definition;
             this.instance.schema = this.options.definition.itemSchema();
+        }
+        this.instance.on('change', this.refresh.bind(this));
         this.instance.on('sync', this.success.bind(this));
         this.instance.on('error', this.showErrors.bind(this));
         this.form = new Backbone.Form({
@@ -223,4 +237,13 @@ var FormView = Backbone.View.extend({
             this.$el.html(this.templateError({msg: xhr.responseText}));
         }
     },
+
+    /**
+     * Refresh field values from instance attributes.
+     */
+    refresh: function () {
+        for (f in this.instance.changed) {
+            this.$('[name='+ f + ']').val(this.instance.get(f));
+        }
+    }
 });

@@ -65,9 +65,7 @@ var AddView = FormView.extend({
     onMapClick: function (e) {
         this.marker = L.marker(e.latlng).addTo(this.map);
         this.$el.find('#map-help').remove();
-        var lnglat = [e.latlng.lng, e.latlng.lat]
-          , geomfield = this.collection.definition.geomField();
-        this.$el.find('[name='+ geomfield + ']').val(JSON.stringify(lnglat));
+        this.instance.setLayer(this.marker);
     },
 });
 
@@ -109,7 +107,7 @@ var ListView = Backbone.View.extend({
     addOne: function (item) {
         var tpl = this.definition.templateRow();
         this.$('table tbody').append(tpl(item.toJSON()));
-        var geom = item.geometry();
+        var geom = item.layer();
         if (geom) {
             geom.addTo(this.map);
             this.bounds.extend(geom.getLatLng());

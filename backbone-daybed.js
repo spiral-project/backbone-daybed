@@ -1,3 +1,10 @@
+/**
+ * Default settings
+ */
+if (!window.settings) settings = {};
+if (!settings.SERVER) settings.SERVER = "localhost:8000";
+
+
 var Item = Backbone.Model.extend({
     popup: function () {
         var tpl = this.definition.templatePopup();

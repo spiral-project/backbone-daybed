@@ -46,6 +46,7 @@ var AddView = FormView.extend({
         if (this.marker) this.map.removeLayer(this.marker);
         this.marker = null;
         this.map.off('click');
+        this.trigger('close');
         this.remove();
         return false;
     },
@@ -101,11 +102,15 @@ var ListView = Backbone.View.extend({
 
     addForm: function (e) {
         e.preventDefault();
-
+        
         this.addView = new AddView({map:this.map,
                                     definition:this.definition,
                                     collection:this.collection});
-        this.$el.find("#list").prepend(this.addView.render().el);
+        this.addView.on('close', function () {
+            this.$("a#add").show();
+        }, this);
+        this.$("a#add").hide();
+        this.$("#list").prepend(this.addView.render().el);
     },
 
     addOne: function (item) {
@@ -136,7 +141,8 @@ var ListView = Backbone.View.extend({
         this.render();
         this.bounds = new L.LatLngBounds();
         this.collection.each(this.addOne.bind(this));
-        if (this.bounds.isValid()) this.map.fitBounds(this.bounds);
+        if (this.bounds.isValid() && this.collection.length > 1)
+            this.map.fitBounds(this.bounds);
     },
 
     highlight: function (e) {
@@ -147,7 +153,7 @@ var ListView = Backbone.View.extend({
 
 
 var HomeView = Backbone.View.extend({
-    template: Mustache.compile('<h1>Daybed Map</h1><input id="modelname" placeholder="Name"/><a href="#" class="btn">Go</a>'),
+    template: Mustache.compile('<h1>Daybed Map</h1><input id="modelname" placeholder="Name"/> <a href="#" class="btn">Go</a>'),
 
     events: {
         "keyup input#modelname": "setLink",

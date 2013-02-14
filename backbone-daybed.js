@@ -197,10 +197,12 @@ var Definition = Backbone.Model.extend({
 var FormView = Backbone.View.extend({
     model: null,
     tagName: "div",
+    className: "well",
+
     template: Mustache.compile('<h2>{{ title }}</h2>' +
                                '<div id="form"></div>' +
-                               '<a id="cancel">Cancel</a>' +
-                               '<a id="submit" class="btn">Save</a>'),
+                               '<a id="cancel" class="btn">Cancel</a> ' +
+                               '<a id="submit" class="btn btn-success">Save</a>'),
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
 
     events: {

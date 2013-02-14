@@ -106,7 +106,10 @@ var ListView = Backbone.View.extend({
 
     addOne: function (item) {
         var tpl = this.definition.templateRow();
-        this.$('table tbody').append(tpl(item.toJSON()));
+        this.$('table tbody').append(tpl(item.toJSON()))
+            .css("opacity", "0.1")
+            .animate({opacity: 1.0}, 1000);
+
         var geom = item.layer();
         if (geom) {
             geom.addTo(this.map);

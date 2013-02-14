@@ -1,15 +1,3 @@
-var ItemRow = Backbone.View.extend({
-
-    tagName: "li",
-    template: Mustache.compile('{{ mushroom }}'),
-
-    render: function() {
-        this.$el.html(this.template(this.model.toJSON()));
-        return this;
-    }
-});
-
-
 var FormView = Backbone.View.extend({
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
 
@@ -174,6 +162,7 @@ var ListView = Backbone.View.extend({
     render: function () {
         var count = this.collection.length;
         this.$el.html(this.template({definition: this.definition.attributes, count:count}));
+        this.$el.find("#list").html(this.definition.tableContent());
         return this;
     },
 
@@ -182,12 +171,14 @@ var ListView = Backbone.View.extend({
         this.$el.find("#list").prepend(this.addView.render().el);
     },
 
-    addOne: function (spot) {
-        var view = new ItemRow({model: spot});
-        this.$('#list').append(view.render().el);
-        var geom = spot.geometry();
-        geom.addTo(this.map);
-        this.bounds.extend(geom.getLatLng());
+    addOne: function (item) {
+        var tpl = this.definition.templateRow();
+        this.$('table tbody').append(tpl(item.toJSON()));
+        var geom = item.geometry();
+        if (geom) {
+            geom.addTo(this.map);
+            this.bounds.extend(geom.getLatLng());
+        }
     },
 
     addAll: function () {
@@ -195,9 +186,8 @@ var ListView = Backbone.View.extend({
         this.bounds = new L.LatLngBounds();
         this.collection.each(this.addOne.bind(this));
         if (this.bounds.isValid()) this.map.fitBounds(this.bounds);
-    }
+    },
 });
-
 
 
 var HomeView = Backbone.View.extend({
@@ -252,6 +242,9 @@ var DaybedMapApp = Backbone.Router.extend({
             };
             this.definition.fetch({error: createIfMissing});
         }
-        $("#content").html(new ListView(this.map, this.definition).render().el);
+        var self = this;
+        this.definition.whenReady(function () {
+            $("#content").html(new ListView(self.map, self.definition).render().el);
+        });
     },
 });

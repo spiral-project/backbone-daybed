@@ -1,7 +1,7 @@
 var Item = Backbone.Model.extend({
     popup: function () {
         var tpl = this.definition.templatePopup();
-        return tpl(this.attributes);
+        return tpl(this.toJSON());
     },
 
     geometry: function () {
@@ -59,8 +59,22 @@ var Definition = Backbone.Model.extend({
         }}
     },
 
+    isReady: function () {
+        return this.attributes.fields && this.attributes.fields.length > 0;
+    },
+
+    whenReady: function (cb) {
+        if (this.isReady())
+            cb();
+        else {
+            this.once('change', function () {
+                this.whenReady(cb);
+            }, this);
+        }
+    },
+
     itemSchema: function () {
-        if (!this.attributes.fields)
+        if (!this.isReady())
             throw "Definition is not ready. Fetch it first.";
         var typeMapping = {
             'int': 'Number',
@@ -102,6 +116,16 @@ var Definition = Backbone.Model.extend({
         return schema;
     },
 
+    mainFields: function () {
+        var geomField = this.geomField();
+        return this.attributes.fields.filter(function (e) {
+            return e.name != geomField;
+        });
+    },
+
+    /**
+     * Returns the first field whose type is Geometry.
+     */
     geomField: function () {
         for (i in this.attributes.fields) {
             var f = this.attributes.fields[i];
@@ -113,13 +137,26 @@ var Definition = Backbone.Model.extend({
 
     templatePopup: function () {
         var c = '<div>';
-        for (i in this.attributes.fields) {
-            var f = this.attributes.fields[i];
-            if (f.type == 'point')
-                continue;
+        $(this.mainFields()).each(function (i, f) {
             c += '<p>{{ ' + f.name + ' }}</p>'
-        }
+        });
         c += '</div>';
+        return Mustache.compile(c);
+    },
+
+    tableContent: function () {
+        var tpl = '<table class="table"><thead>' +
+                  '{{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}'+
+                  '</thead><tbody></tbody></table>';
+        return Mustache.compile(tpl)({fields: this.mainFields()});
+    },
+
+    templateRow: function () {
+        var c = '<tr>';
+        $(this.mainFields()).each(function (i, f) {
+            c += '<td>{{ ' + f.name + ' }}</td>'
+        });
+        c += '</tr>';
         return Mustache.compile(c);
     },
 });

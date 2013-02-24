@@ -22,7 +22,7 @@ var Item = Backbone.Model.extend({
             if (!geomfield) {
                 return;
             }
-            var geom = JSON.parse(this.get(geomfield));
+            var geom = JSON.parse(this.get(geomfield.name));
             this.layer = L.circleMarker([geom[1], geom[0]], {fillColor: 'green'})
                           .bindPopup(this.popup());
         }
@@ -36,7 +36,7 @@ var Item = Backbone.Model.extend({
         }
         var lnglat = [layer.getLatLng().lng, layer.getLatLng().lat]
           , attrs = {};
-        attrs[geomfield] = JSON.stringify(lnglat);
+        attrs[geomfield.name] = JSON.stringify(lnglat);
         this.set(attrs);
     },
 
@@ -91,7 +91,7 @@ var Definition = Backbone.Model.extend({
             name: { validators: ['required'] },
             description: { validators: ['required'] },
             type: { type: 'Select', options: ['int', 'string', 'decimal', 'boolean',
-                                              'email', 'url', 'point'] }
+                                              'email', 'url', 'point', 'line', 'polygon'] }
         }}
     },
 
@@ -117,6 +117,11 @@ var Definition = Backbone.Model.extend({
             'string': 'Text',
             'boolean': 'Checkbox'
         }
+        var geom = function (f) {
+            return {type: 'TextArea', 
+                    editorAttrs: {style: 'display: none'},
+                    help: f.description + ' <span>(on map)</span>'};
+        };
         var fieldMapping = {
             'default': function (f) {
                 var d = {help: f.description}
@@ -136,11 +141,9 @@ var Definition = Backbone.Model.extend({
                 d.validators = ['required', 'url'];
                 return d;
             },
-            'point': function (f) {
-                return {type: 'TextArea', 
-                        editorAttrs: {style: 'display: none'},
-                        help: f.description + ' <span>(on map)</span>'};
-            },
+            'point': geom,
+            'line': geom,
+            'polygon': geom,
         };
         var self = this
           , schema = {};
@@ -155,7 +158,7 @@ var Definition = Backbone.Model.extend({
     mainFields: function () {
         var geomField = this.geomField();
         return this.attributes.fields.filter(function (e) {
-            return e.name != geomField;
+            return e.name != geomField.name;
         });
     },
 
@@ -165,8 +168,8 @@ var Definition = Backbone.Model.extend({
     geomField: function () {
         for (i in this.attributes.fields) {
             var f = this.attributes.fields[i];
-            if (f.type == 'point')
-                return f.name;
+            if (f.type == 'point' || f.type == 'line' || f.type == 'polygon')
+                return f;
         }
         return null;
     },

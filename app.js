@@ -33,20 +33,35 @@ var AddView = FormView.extend({
         FormView.prototype.initialize.call(this);
         this.map = this.options.map;
         this.collection = this.options.collection;
-        this.marker = null;
+        this.definition = this.options.definition;
+        this.layer = null;
+        
+        var handlers = {
+            'point': new L.Draw.Marker(this.map),
+            'line': new L.Draw.Polyline(this.map),
+            'polygon': new L.Draw.Polygon(this.map)
+        };
+        var geomField = this.definition.geomField();
+        if (!geomField) return;
+        this.handler = handlers[geomField.type];
+        this.map.on('draw:created', this.onDraw, this);
     },
 
     render: function () {
         FormView.prototype.render.apply(this, arguments);
-        this.$el.append('<span class="map-help alert alert-info">Click on map</span>');
-        this.map.on('click', this.onMapClick.bind(this));
+        if (this.handler) {
+            this.handler.enable();
+            this.$el.append('<span class="map-help alert alert-info">Click on map</span>');
+        }
         return this;
     },
 
     close: function (e) {
-        if (this.marker) this.map.removeLayer(this.marker);
-        this.marker = null;
-        this.map.off('click');
+        if (this.handler) {
+            this.handler.disable();
+            if (this.layer) this.map.removeLayer(this.layer);
+            this.layer = null;
+        }
         this.trigger('close');
         this.remove();
         return false;
@@ -65,13 +80,10 @@ var AddView = FormView.extend({
         this.collection.create(this.instance, {wait: true});
     },
 
-    onMapClick: function (e) {
-        if (!this.marker)
-            this.marker = L.marker(e.latlng).addTo(this.map);
-        else
-            this.marker.setLatLng(e.latlng);
+    onDraw: function (e) {
+        this.layer = e.layer;
         this.$el.find('.map-help').remove();
-        this.instance.setLayer(this.marker);
+        this.instance.setLayer(this.layer);
     },
 });
 

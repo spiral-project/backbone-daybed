@@ -76,15 +76,17 @@ var AddView = FormView.extend({
 
 
 var ListView = Backbone.View.extend({
-    template: Mustache.compile('<h1>{{ definition.title }}</h1><p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
+    template: Mustache.compile('<div id="map"></div>' + 
+                               '<h1>{{ definition.title }}</h1><p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
                                '<div id="list"></div><div id="footer">{{ count }} items.</div>'),
 
     events: {
         "click a#add": "addForm",
     },
 
-    initialize: function (map, definition) {
-        this.map = map;
+    initialize: function (definition) {
+        this.map = null;
+
         this.definition = definition;
 
         this.collection = new ItemList(definition);
@@ -96,7 +98,12 @@ var ListView = Backbone.View.extend({
     render: function () {
         var count = this.collection.length;
         this.$el.html(this.template({definition: this.definition.attributes, count:count}));
-        this.$el.find("#list").html(this.definition.tableContent());
+        this.$("#list").html(this.definition.tableContent());
+
+        this.map = L.map(this.$("#map")[0]).setView([0, 0], 3);
+        this.map.attributionControl.setPrefix(''); 
+        L.tileLayer(settings.TILES).addTo(this.map);
+
         return this;
     },
 
@@ -180,10 +187,6 @@ var DaybedMapApp = Backbone.Router.extend({
 
     initialize: function () {
         this.definition = null;
-        
-        this.map = L.map('map').setView([0, 0], 3);
-        this.map.attributionControl.setPrefix(''); 
-        L.tileLayer('http://{s}.tiles.mapbox.com//v3/leplatrem.map-3jyuq4he/{z}/{x}/{y}.png').addTo(this.map);
     },
 
     home: function() {
@@ -206,7 +209,7 @@ var DaybedMapApp = Backbone.Router.extend({
         }
         var self = this;
         this.definition.whenReady(function () {
-            $("#content").html(new ListView(self.map, self.definition).render().el);
+            $("#content").html(new ListView(self.definition).render().el);
         });
     },
 });

@@ -1,8 +1,12 @@
 /**
  * Default settings
  */
-if (!window.settings) settings = {};
-if (!settings.SERVER) settings.SERVER = "localhost:8000";
+if (!window.settings) {
+    settings = {
+        SERVER: "localhost:8000",
+        TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    };
+}
 
 
 var Item = Backbone.Model.extend({

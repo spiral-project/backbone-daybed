@@ -78,16 +78,16 @@ var AddView = FormView.extend({
 var ListView = Backbone.View.extend({
     template: Mustache.compile('<div id="map"></div>' + 
                                '<h1>{{ definition.title }}</h1><p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
-                               '<div id="list"></div><div id="footer">{{ count }} items.</div>'),
+                               '<div id="stats"><span class="count">0</span> items in total.</div>' +
+                               '<div id="list"></div>'),
 
     events: {
         "click a#add": "addForm",
     },
 
     initialize: function (definition) {
-        this.map = null;
-
         this.definition = definition;
+        this.map = null;
 
         this.collection = new ItemList(definition);
         this.collection.bind('add', this.addOne, this);
@@ -96,8 +96,7 @@ var ListView = Backbone.View.extend({
     },
 
     render: function () {
-        var count = this.collection.length;
-        this.$el.html(this.template({definition: this.definition.attributes, count:count}));
+        this.$el.html(this.template({definition: this.definition.attributes}));
         this.$("#list").html(this.definition.tableContent());
 
         this.map = L.map(this.$("#map")[0]).setView([0, 0], 3);
@@ -123,6 +122,7 @@ var ListView = Backbone.View.extend({
     addOne: function (item) {
         var tpl = this.definition.templateRow();
         this.$('table tbody').prepend(tpl(item.toJSON()));
+        this.$('span.count').html(this.collection.length);
 
         var geom = item.getLayer();
         if (geom) {
@@ -145,7 +145,6 @@ var ListView = Backbone.View.extend({
     },
 
     addAll: function () {
-        this.render();
         this.bounds = new L.LatLngBounds();
         this.collection.each(this.addOne.bind(this));
         if (this.bounds.isValid() && this.collection.length > 1)
@@ -209,7 +208,9 @@ var DaybedMapApp = Backbone.Router.extend({
         }
         var self = this;
         this.definition.whenReady(function () {
-            $("#content").html(new ListView(self.definition).render().el);
+            var view = new ListView(self.definition);
+            $("#content").html(view.el);  // Leaflet needs its container in DOM
+            view.render();
         });
     },
 });

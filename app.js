@@ -38,6 +38,7 @@ var AddView = FormView.extend({
 
     render: function () {
         FormView.prototype.render.apply(this, arguments);
+        this.$el.append('<span class="map-help alert alert-info">Click on map</span>');
         this.map.on('click', this.onMapClick.bind(this));
         return this;
     },
@@ -69,7 +70,7 @@ var AddView = FormView.extend({
             this.marker = L.marker(e.latlng).addTo(this.map);
         else
             this.marker.setLatLng(e.latlng);
-        this.$el.find('#map-help').remove();
+        this.$el.find('.map-help').remove();
         this.instance.setLayer(this.marker);
     },
 });
@@ -116,7 +117,7 @@ var ListView = Backbone.View.extend({
             this.$("a#add").show();
         }, this);
         this.$("a#add").hide();
-        this.$("#list").prepend(this.addView.render().el);
+        this.$("a#add").after(this.addView.render().el);
     },
 
     addOne: function (item) {

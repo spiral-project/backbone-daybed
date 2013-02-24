@@ -139,7 +139,7 @@ var Definition = Backbone.Model.extend({
             'point': function (f) {
                 return {type: 'TextArea', 
                         editorAttrs: {style: 'display: none'},
-                        help: f.description + ' <span id="map-help">Click on map</span>'};
+                        help: f.description + ' <span>(on map)</span>'};
             },
         };
         var self = this

@@ -259,7 +259,8 @@ var FormView = Backbone.View.extend({
             var descriptions = JSON.parse(xhr.responseText),
                 self = this;
             $(descriptions.errors).each(function (i, e) {
-                self.$el.find("[name='" + e.name + "']")
+                var name = e.name.split('.')[0];
+                self.$el.find("[name='" + name + "']")
                     .after(self.templateError({msg: e.description}));
             });
         }

@@ -161,7 +161,7 @@ var ListView = Backbone.View.extend({
         }, this);
 
         this.$('table tbody tr').first()
-        .hover(function () {
+        .hoverIntent(function () {
             $(this).addClass('success');
             item.highlight(true);
         },

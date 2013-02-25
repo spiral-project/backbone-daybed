@@ -152,6 +152,14 @@ var ListView = Backbone.View.extend({
         }
 
         // Row and map items highlighting
+        item.on('highlight', function (state) {
+            var row = this.$("tr[data-id='" + item.get('id') + "']");
+            if (state)
+                row.addClass('success');
+            else
+                row.removeClass('success')
+        }, this);
+
         this.$('table tbody tr').first()
         .hover(function () {
             $(this).addClass('success');

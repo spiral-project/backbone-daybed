@@ -1,12 +1,36 @@
 /**
  * Default settings
  */
-if (!window.settings) {
-    settings = {
-        SERVER: "localhost:8000",
-        TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    };
-}
+window.settings = window.settings || {
+    SERVER: "localhost:8000",
+    TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    STYLES: {
+        default: {color: 'green', fillColor: 'green'},
+        highlight: {color: 'yellow', fillColor: 'yellow'},
+    }
+};
+
+/** Until the 42 issues and pull requests are fixed in Leaflet core */
+L.extend(L.GeoJSON, {
+    latLngsToCoords: function (layer) {
+        var coords = function coords (latlng) {
+            return [latlng.lng, latlng.lat];
+        };
+        if (layer.getLatLng) {
+            var latlng = layer.getLatLng();
+            return coords(layer.getLatLng());
+        }
+        else if (layer instanceof L.Polygon) {
+            var latlngs = layer.getLatLngs();
+            return [_.map(latlngs, function (latlng) {return coords(latlng);})];
+        }
+        else if (layer instanceof L.Polyline) {
+            var latlngs = layer.getLatLngs();
+            return _.map(latlngs, function (latlng) {return coords(latlng);});
+        }
+        else throw "Could not export layer coordinates";
+    },
+});
 
 
 var Item = Backbone.Model.extend({
@@ -17,14 +41,22 @@ var Item = Backbone.Model.extend({
 
     getLayer: function () {
         if (!this.layer) {
-
             var geomfield = this.definition.geomField();
             if (!geomfield) {
                 return;
             }
-            var geom = JSON.parse(this.get(geomfield.name));
-            this.layer = L.circleMarker([geom[1], geom[0]], {fillColor: 'green'})
-                          .bindPopup(this.popup());
+            var factory = {
+                'point': function (coords) {return L.circleMarker([coords[1], coords[0]]);},
+                'line': function (coords) {return L.polyline(L.GeoJSON.coordsToLatLngs(coords));},
+                'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));},
+            };
+            var coords = JSON.parse(this.get(geomfield.name));
+            console.log(coords);
+            this.layer = factory[geomfield.type](coords);
+            this.layer.setStyle(settings.STYLES.default)
+                       .on('mouseover', function (e) {this.highlight(true);}, this)
+                       .on('mouseout',  function (e) {this.highlight(false);}, this)
+                       .bindPopup(this.popup());
         }
         return this.layer;
     },
@@ -34,20 +66,21 @@ var Item = Backbone.Model.extend({
         if (!geomfield) {
             return;
         }
-        var lnglat = [layer.getLatLng().lng, layer.getLatLng().lat]
+        var coords = L.GeoJSON.latLngsToCoords(layer)
           , attrs = {};
-        attrs[geomfield.name] = JSON.stringify(lnglat);
+        attrs[geomfield.name] = JSON.stringify(coords);
         this.set(attrs);
     },
 
     highlight: function (state) {
         if (!this.layer) return;
         if (state) {
-            this.layer.setStyle({fillColor: 'yellow'});
+            this.layer.setStyle(settings.STYLES.highlight);
         }
         else {
-            this.layer.setStyle({fillColor: 'green'});
+            this.layer.setStyle(settings.STYLES.default);
         }
+        this.trigger('highlight', state);
     }
 });
 
@@ -147,6 +180,7 @@ var Definition = Backbone.Model.extend({
         };
         var self = this
           , schema = {};
+        // Add Backbone.Forms fields from Daybed definition
         $(this.attributes.fields).each(function (i, field) {
             var defaultschema = fieldMapping['default']
               , build = fieldMapping[field.type] || defaultschema;

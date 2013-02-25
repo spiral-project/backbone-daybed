@@ -82,8 +82,15 @@ var AddView = FormView.extend({
 
     onDraw: function (e) {
         this.layer = e.layer;
+        this.layer.addTo(this.map);
         this.$el.find('.map-help').remove();
-        this.instance.setLayer(this.layer);
+
+        // Make it editable and save while editing
+        this.layer[this.layer instanceof L.Marker ? 'dragging' : 'editing'].enable();
+        this.layer.on('dragend edit', function storefield (e) {
+            this.instance.setLayer(e.target);
+        }, this);
+        this.layer.fire('edit');  // store once
     },
 });
 
@@ -140,7 +147,8 @@ var ListView = Backbone.View.extend({
         var geom = item.getLayer();
         if (geom) {
             geom.addTo(this.map);
-            this.bounds.extend(geom.getLatLng());
+            var bounds = geom.getLatLng ? geom.getLatLng() : geom.getBounds();
+            if (bounds && bounds.isValid()) this.bounds.extend(bounds);
         }
 
         // Row and map items highlighting

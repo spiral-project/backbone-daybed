@@ -4,10 +4,6 @@
 window.settings = window.settings || {
     SERVER: "localhost:8000",
     TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    STYLES: {
-        default: {color: 'green', fillColor: 'green'},
-        highlight: {color: 'yellow', fillColor: 'yellow'},
-    }
 };
 
 /** Until the 42 issues and pull requests are fixed in Leaflet core */
@@ -17,16 +13,16 @@ L.extend(L.GeoJSON, {
             return [latlng.lng, latlng.lat];
         };
         if (layer.getLatLng) {
-            var latlng = layer.getLatLng();
             return coords(layer.getLatLng());
         }
         else if (layer instanceof L.Polygon) {
-            var latlngs = layer.getLatLngs();
-            return [_.map(latlngs, function (latlng) {return coords(latlng);})];
+            // A polygon can theorically have holes, thus list of rings.
+            return [_.map(layer.getLatLngs(), function (latlng) {
+                return coords(latlng);
+            })];
         }
         else if (layer instanceof L.Polyline) {
-            var latlngs = layer.getLatLngs();
-            return _.map(latlngs, function (latlng) {return coords(latlng);});
+            return _.map(layer.getLatLngs(), function (latlng) {return coords(latlng);});
         }
         else throw "Could not export layer coordinates";
     },
@@ -42,46 +38,28 @@ var Item = Backbone.Model.extend({
     getLayer: function () {
         if (!this.layer) {
             var geomfield = this.definition.geomField();
-            if (!geomfield) {
-                return;
-            }
-            var factory = {
+            if (!geomfield) return;
+
+            var factories = {
                 'point': function (coords) {return L.circleMarker([coords[1], coords[0]]);},
                 'line': function (coords) {return L.polyline(L.GeoJSON.coordsToLatLngs(coords));},
                 'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));},
             };
             var coords = JSON.parse(this.get(geomfield.name));
-            console.log(coords);
-            this.layer = factory[geomfield.type](coords);
-            this.layer.setStyle(settings.STYLES.default)
-                       .on('mouseover', function (e) {this.highlight(true);}, this)
-                       .on('mouseout',  function (e) {this.highlight(false);}, this)
-                       .bindPopup(this.popup());
+            this.layer = factories[geomfield.type](coords);
         }
         return this.layer;
     },
 
     setLayer: function (layer) {
         var geomfield = this.definition.geomField();
-        if (!geomfield) {
-            return;
-        }
+        if (!geomfield) return;
+
         var coords = L.GeoJSON.latLngsToCoords(layer)
           , attrs = {};
         attrs[geomfield.name] = JSON.stringify(coords);
         this.set(attrs);
     },
-
-    highlight: function (state) {
-        if (!this.layer) return;
-        if (state) {
-            this.layer.setStyle(settings.STYLES.highlight);
-        }
-        else {
-            this.layer.setStyle(settings.STYLES.default);
-        }
-        this.trigger('highlight', state);
-    }
 });
 
 

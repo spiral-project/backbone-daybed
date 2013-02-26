@@ -1,3 +1,9 @@
+settings.STYLES = settings.STYLES || {
+    default: {color: 'green', fillColor: 'green'},
+    highlight: {color: 'yellow', fillColor: 'yellow'},
+};
+
+
 var DefinitionCreate = FormView.extend({
     model: Definition,
 
@@ -144,33 +150,36 @@ var ListView = Backbone.View.extend({
         this.$('table tbody').prepend(tpl(item.toJSON()));
         this.$('span.count').html(this.collection.length);
 
-        var geom = item.getLayer();
-        if (geom) {
-            geom.addTo(this.map);
-            var bounds = geom.getLatLng ? geom.getLatLng() : geom.getBounds();
+        var layer = item.getLayer();
+        if (layer) {
+            layer.setStyle(settings.STYLES.default)
+                 .bindPopup(item.popup())
+                 .addTo(this.map);
+
+            // Will fit map on items
+            var bounds = layer.getLatLng ? layer.getLatLng() : layer.getBounds();
             if (bounds && bounds.isValid()) this.bounds.extend(bounds);
-        }
 
-        // Row and map items highlighting
-        item.on('highlight', function (state) {
+            // Row and map items highlighting
             var row = this.$("tr[data-id='" + item.get('id') + "']");
-            if (state)
-                row.addClass('success');
-            else
-                row.removeClass('success')
-        }, this);
+            layer.on('mouseover', function (e) {
+                this.setStyle(settings.STYLES.highlight);
+                row.addClass('success')
+                   .css("opacity", "0.1")
+                   .animate({opacity: 1.0}, 400);
+            }, layer);
+            layer.on('mouseout',  function (e) {
+                this.setStyle(settings.STYLES.default);
+                row.removeClass('success');
+            }, layer);
 
-        this.$('table tbody tr').first()
-        .hoverIntent(function () {
-            $(this).addClass('success');
-            item.highlight(true);
-        },
-        function () {
-            $(this).removeClass('success');
-            item.highlight(false);
-        })
-        .css("opacity", "0.1")
-        .animate({opacity: 1.0}, 1000);
+            row.hoverIntent(function () {
+                layer.fire('mouseover');
+            },
+            function () {
+                layer.fire('mouseout');
+            });
+        }
     },
 
     addAll: function () {
@@ -178,11 +187,6 @@ var ListView = Backbone.View.extend({
         this.collection.each(this.addOne.bind(this));
         if (this.bounds.isValid() && this.collection.length > 1)
             this.map.fitBounds(this.bounds);
-    },
-
-    highlight: function (e) {
-        var i = this.collection.get(e.data('id'));
-        i.highlight();
     },
 });
 

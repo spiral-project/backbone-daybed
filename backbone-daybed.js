@@ -45,7 +45,10 @@ var Item = Backbone.Model.extend({
                 'line': function (coords) {return L.polyline(L.GeoJSON.coordsToLatLngs(coords));},
                 'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));},
             };
-            var coords = JSON.parse(this.get(geomfield.name));
+            var coords = this.get(geomfield.name);
+            if (typeof coords === 'string') {
+                coords = JSON.parse(geom);
+            }
             this.layer = factories[geomfield.type](coords);
         }
         return this.layer;

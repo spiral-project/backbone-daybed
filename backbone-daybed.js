@@ -47,7 +47,7 @@ var Item = Backbone.Model.extend({
             };
             var coords = this.get(geomfield.name);
             if (typeof coords === 'string') {
-                coords = JSON.parse(geom);
+                coords = JSON.parse(coords);
             }
             this.layer = factories[geomfield.type](coords);
         }

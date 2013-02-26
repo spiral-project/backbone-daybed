@@ -157,15 +157,21 @@ var ListView = Backbone.View.extend({
                  .addTo(this.map);
 
             // Will fit map on items
-            var bounds = layer.getLatLng ? layer.getLatLng() : layer.getBounds();
-            if (bounds && bounds.isValid()) this.bounds.extend(bounds);
+            if (layer.getLatLng) {
+                this.bounds.extend(layer.getBounds());
+            }
+            else {
+                var bounds = layer.getBounds();
+                bounds.isValid() && this.bounds.extend(bounds);
+            }
 
+            var map = this.map;
             // Row and map items highlighting
             var row = this.$("tr[data-id='" + item.get('id') + "']");
             layer.on('mouseover', function (e) {
                 this.setStyle(settings.STYLES.highlight);
                 // Pop on top
-                this._map.removeLayer(this).addLayer(this);
+                map.removeLayer(this).addLayer(this);
                 row.addClass('success')
                    .css("opacity", "0.1")
                    .animate({opacity: 1.0}, 400);
@@ -180,6 +186,13 @@ var ListView = Backbone.View.extend({
             },
             function () {
                 layer.fire('mouseout');
+            });
+
+            row.on('dblclick', function () {
+                if (layer.getLatLng)
+                    map.panTo(layer.getLatLng());
+                else
+                    map.fitBounds(layer.getBounds());
             });
         }
     },

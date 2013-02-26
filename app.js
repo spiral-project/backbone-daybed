@@ -1,6 +1,6 @@
 settings.STYLES = settings.STYLES || {
-    default: {color: 'green', fillColor: 'green'},
-    highlight: {color: 'yellow', fillColor: 'yellow'},
+    default: {color: 'green', fillColor: 'green', opacity: 0.5},
+    highlight: {color: 'yellow', fillColor: 'yellow', opacity: 1.0},
 };
 
 
@@ -164,6 +164,8 @@ var ListView = Backbone.View.extend({
             var row = this.$("tr[data-id='" + item.get('id') + "']");
             layer.on('mouseover', function (e) {
                 this.setStyle(settings.STYLES.highlight);
+                // Pop on top
+                this._map.removeLayer(this).addLayer(this);
                 row.addClass('success')
                    .css("opacity", "0.1")
                    .animate({opacity: 1.0}, 400);

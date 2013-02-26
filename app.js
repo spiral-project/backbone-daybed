@@ -192,7 +192,9 @@ var ListView = Backbone.View.extend({
 
 
 var HomeView = Backbone.View.extend({
-    template: Mustache.compile('<h1>Daybed Map</h1><input id="modelname" placeholder="Name"/> <a href="#" class="btn">Go</a>'),
+    template: Mustache.compile('<div class="hero-unit"><h1>Daybed Map</h1>' + 
+                               '<p>Join an existing map or create a new one.</p>' + 
+                               '<input id="modelname" placeholder="Name"/> <a href="#" class="btn">Go</a></div>'),
 
     events: {
         "keyup input#modelname": "setLink",

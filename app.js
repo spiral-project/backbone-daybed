@@ -181,6 +181,10 @@ var ListView = Backbone.View.extend({
                 row.removeClass('success');
             }, layer);
 
+            layer.on('click', function (e) {
+                window.scrollTo(0, row.offset().top)
+            });
+
             row.hoverIntent(function () {
                 layer.fire('mouseover');
             },

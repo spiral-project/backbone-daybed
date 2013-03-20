@@ -165,15 +165,17 @@ var Definition = Backbone.Model.extend({
         $(this.attributes.fields).each(function (i, field) {
             var defaultschema = fieldMapping['default']
               , build = fieldMapping[field.type] || defaultschema;
-            if (build) schema[field.name] = build(field, defaultschema(field));
+            schema[field.name] = build(field);
         });
         return schema;
     },
 
     mainFields: function () {
         var geomField = this.geomField();
-        return this.attributes.fields.filter(function (e) {
-            return e.name != geomField.name;
+        if (!geomField)
+            return this.attributes.fields;
+        return this.attributes.fields.filter(function (f) {
+            return f.name != geomField.name;
         });
     },
 

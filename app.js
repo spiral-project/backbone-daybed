@@ -12,15 +12,18 @@ var MapModel = Definition.extend({
 
     initialize: function () {
         // Add meta types to schema choice list
+        var choices = this.schema.fields.subSchema.type.options;
         for (var metatype in this.metaTypes) {
-            this.schema.fields.subSchema.type.options.push(metatype);
+            if (!_.contains(choices, metatype))
+                choices.push(metatype);
         }
     },
 
     save: function () {
         // Substitute meta types by daybed
+        var self = this;
         $(this.attributes.fields).each(function (i, field) {
-            var meta = this.metaTypes[field.type];
+            var meta = self.metaTypes[field.type];
             if (meta) {
                 field.meta = field.type;
                 field.type = meta;
@@ -35,7 +38,6 @@ var MapModel = Definition.extend({
             'icon':  function () { return { type: 'Select', options: ['home', 'glass', 'flag', 'star'] } },
         };
         var schema = Definition.prototype.itemSchema.call(this);
-        var self = this;
         $(this.attributes.fields).each(function (i, field) {
             if (field.meta) {
                 var build = fieldMapping[field.meta]

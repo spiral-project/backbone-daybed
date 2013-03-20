@@ -143,15 +143,18 @@ var Definition = Backbone.Model.extend({
                 if (t) d.type = t;
                 return d;
             },
-            'decimal': function (f, d) {
+            'decimal': function (f) {
+                var d = fieldMapping['default'](field);
                 d.editorAttrs = {pattern: '[-+]?[0-9]*\.?[0-9]+'};
                 return d;
             },
-            'email': function (f, d) {
+            'email': function (f) {
+                var d = fieldMapping['default'](field);
                 d.validators = ['required', 'email'];
                 return d;
             },
-            'url': function (f, d) {
+            'url': function (f) {
+                var d = fieldMapping['default'](field);
                 d.validators = ['required', 'url'];
                 return d;
             },

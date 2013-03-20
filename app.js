@@ -4,8 +4,52 @@ settings.STYLES = settings.STYLES || {
 };
 
 
+var MapModel = Definition.extend({
+    metaTypes: {
+        'color': 'string',
+        'icon': 'string',
+    },
+
+    initialize: function () {
+        // Add meta types to schema choice list
+        for (var metatype in this.metaTypes) {
+            this.schema.fields.subSchema.type.options.push(metatype);
+        }
+    },
+
+    save: function () {
+        // Substitute meta types by daybed
+        $(this.attributes.fields).each(function (i, field) {
+            var meta = this.metaTypes[field.type];
+            if (meta) {
+                field.meta = field.type;
+                field.type = meta;
+            }
+        });
+        Definition.prototype.save.apply(this, arguments);
+    },
+
+    itemSchema: function () {
+        var fieldMapping = {
+            'color': function () { return { type: 'Select', options: ['red', 'orange', 'green', 'blue'] } },
+            'icon':  function () { return { type: 'Select', options: ['home', 'glass', 'flag', 'star'] } },
+        };
+        var schema = Definition.prototype.itemSchema.call(this);
+        var self = this;
+        $(this.attributes.fields).each(function (i, field) {
+            if (field.meta) {
+                var build = fieldMapping[field.meta]
+                if (build)
+                    schema[field.name] = build(field);
+            }
+        });
+        return schema;
+    },
+});
+
+
 var DefinitionCreate = FormView.extend({
-    model: Definition,
+    model: MapModel,
 
     initialize: function () {
         FormView.prototype.initialize.call(this);
@@ -252,7 +296,7 @@ var DaybedMapApp = Backbone.Router.extend({
 
     list: function(modelname) {
         if (!this.definition || this.definition.modelname != modelname) {
-            this.definition = new Definition({id: modelname});
+            this.definition = new MapModel({id: modelname});
             var createIfMissing = function (model, xhr) {
                 if (xhr.status == 404) {
                     app.navigate(modelname + '/create', {trigger:true});

@@ -1,0 +1,12 @@
+[submodule "libs/jquery-hoverIntent"]
+	path = libs/jquery-hoverIntent
+	url = https://github.com/briancherne/jquery-hoverIntent.git
+[submodule "libs/backbone-forms"]
+	path = libs/backbone-forms
+	url = https://github.com/powmedia/backbone-forms.git
+[submodule "libs/Leaflet.draw"]
+	path = libs/Leaflet.draw
+	url = https://github.com/Leaflet/Leaflet.draw.git
+[submodule "libs/Leaflet.awesome-markers"]
+	path = libs/Leaflet.awesome-markers
+	url = https://github.com/lvoogdt/Leaflet.awesome-markers.git

@@ -281,7 +281,7 @@ var FormView = Backbone.View.extend({
                 var name = e.name.split('.')[0];
                 this.$el.find("[name='" + name + "']")
                     .after(this.templateError({msg: e.description}));
-            }, this);
+            }, this));
         }
         catch (e) {
             this.$el.html(this.templateError({msg: xhr.responseText}));

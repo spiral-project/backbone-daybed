@@ -46,6 +46,19 @@ var MapModel = Definition.extend({
         });
         return schema;
     },
+
+    _getField: function (metatype) {
+        return _.filter(this.attributes.fields,
+                         function(f) { return f.meta == metatype })[0];
+    },
+
+    colorField: function () {
+        return this._getField('color');
+    },
+
+    iconField: function () {
+        return this._getField('icon');
+    },
 });
 
 
@@ -197,13 +210,33 @@ var ListView = Backbone.View.extend({
 
         var layer = item.getLayer();
         if (layer) {
-            layer.setStyle(settings.STYLES.default)
-                 .bindPopup(item.popup())
+            var style = L.Util.extend({}, settings.STYLES.default);
+
+            // Has color ?
+            var colorField = this.definition.colorField();
+            if (colorField) {
+                style.color = item.get(colorField.name);
+                style.fillColor = style.color;
+            }
+            // Has icon ?
+            var iconField = this.definition.iconField();
+            if (iconField && 'point' == item.definition.geomField().type) {
+                var marker = L.AwesomeMarkers.icon({
+                    color: style.color,
+                    icon: item.get(iconField.name)
+                });
+                layer = L.marker(layer.getLatLng(), {icon: marker});
+            }
+            else {
+                layer.setStyle(style);
+            }
+
+            layer.bindPopup(item.popup())
                  .addTo(this.map);
 
             // Will fit map on items
-            if (layer.getLatLng) {
-                this.bounds.extend(layer.getBounds());
+            if (typeof layer.getLatLng == 'function') {
+                this.bounds.extend(layer.getLatLng());
             }
             else {
                 var bounds = layer.getBounds();
@@ -214,7 +247,7 @@ var ListView = Backbone.View.extend({
             // Row and map items highlighting
             var row = this.$("tr[data-id='" + item.get('id') + "']");
             layer.on('mouseover', function (e) {
-                this.setStyle(settings.STYLES.highlight);
+                this.setStyle && this.setStyle(settings.STYLES.highlight);
                 // Pop on top
                 map.removeLayer(this).addLayer(this);
                 row.addClass('success')
@@ -222,7 +255,7 @@ var ListView = Backbone.View.extend({
                    .animate({opacity: 1.0}, 400);
             }, layer);
             layer.on('mouseout',  function (e) {
-                this.setStyle(settings.STYLES.default);
+                this.setStyle && this.setStyle(style);
                 row.removeClass('success');
             }, layer);
 

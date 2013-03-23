@@ -39,12 +39,13 @@ var Item = Backbone.Model.extend({
         if (!this.layer) {
             var geomfield = this.definition.geomField();
             if (!geomfield) return;
-
+            
             var factories = {
                 'point': function (coords) {return L.circleMarker([coords[1], coords[0]]);},
                 'line': function (coords) {return L.polyline(L.GeoJSON.coordsToLatLngs(coords));},
                 'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));},
             };
+
             var coords = this.get(geomfield.name);
             if (typeof coords === 'string') {
                 coords = JSON.parse(coords);
@@ -162,8 +163,7 @@ var Definition = Backbone.Model.extend({
             'line': geom,
             'polygon': geom,
         };
-        var self = this
-          , schema = {};
+        var schema = {};
         // Add Backbone.Forms fields from Daybed definition
         $(this.attributes.fields).each(function (i, field) {
             var defaultschema = fieldMapping['default']
@@ -276,13 +276,12 @@ var FormView = Backbone.View.extend({
 
     showErrors: function (model, xhr, options) {
         try {
-            var descriptions = JSON.parse(xhr.responseText),
-                self = this;
-            $(descriptions.errors).each(function (i, e) {
+            var descriptions = JSON.parse(xhr.responseText);
+            $(descriptions.errors).each(L.Util.bind(function (i, e) {
                 var name = e.name.split('.')[0];
-                self.$el.find("[name='" + name + "']")
-                    .after(self.templateError({msg: e.description}));
-            });
+                this.$el.find("[name='" + name + "']")
+                    .after(this.templateError({msg: e.description}));
+            }, this);
         }
         catch (e) {
             this.$el.html(this.templateError({msg: xhr.responseText}));

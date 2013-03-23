@@ -21,14 +21,13 @@ var MapModel = Definition.extend({
 
     save: function () {
         // Substitute meta types by daybed
-        var self = this;
-        $(this.attributes.fields).each(function (i, field) {
-            var meta = self.metaTypes[field.type];
+        $(this.attributes.fields).each(L.Util.bind(function (i, field) {
+            var meta = this.metaTypes[field.type];
             if (meta) {
                 field.meta = field.type;
                 field.type = meta;
             }
-        });
+        }, this));
         Definition.prototype.save.apply(this, arguments);
     },
 
@@ -306,11 +305,10 @@ var DaybedMapApp = Backbone.Router.extend({
             };
             this.definition.fetch({error: createIfMissing});
         }
-        var self = this;
-        this.definition.whenReady(function () {
-            var view = new ListView(self.definition);
+        this.definition.whenReady(L.Util.bind(function () {
+            var view = new ListView(this.definition);
             $("#content").html(view.el);  // Leaflet needs its container in DOM
             view.render();
-        });
+        }, this));
     },
 });

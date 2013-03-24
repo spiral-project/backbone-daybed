@@ -33,8 +33,21 @@ var MapModel = Definition.extend({
 
     itemSchema: function () {
         var fieldMapping = {
-            'color': function () { return { type: 'Select', options: ['red', 'orange', 'green', 'blue'] } },
-            'icon':  function () { return { type: 'Select', options: ['home', 'glass', 'flag', 'star'] } },
+            'color': function () {
+                return { type: 'Select', options: [
+                    'red', 'blue', 'orange', 'green', 'purple',
+                    'darkred', 'darkgreen', 'darkblue', 'darkpurple', 'cadetblue'
+                ] }
+            },
+            'icon':  function () {
+                return { type: 'Select', options: [
+                    {group: 'Location',
+                     options: ['home', 'music', 'medkit', 'camera-retro', 'info-sign', 'plane', ]},
+                    {group: 'Food & Drink',
+                     options: ['food', 'glass', 'coffee', ]},
+                    {group: 'Symbols',
+                     options: ['flag', 'star', 'suitcase']},
+                ] } },
         };
         var schema = Definition.prototype.itemSchema.call(this);
         $(this.attributes.fields).each(function (i, field) {
@@ -115,7 +128,7 @@ var AddView = FormView.extend({
         FormView.prototype.render.apply(this, arguments);
         if (this.handler) {
             this.handler.enable();
-            this.$el.append('<span class="map-help alert alert-info">Click on map</span>');
+            this.$el.append('<span class="map-help alert">Click on map</span>');
         }
         return this;
     },

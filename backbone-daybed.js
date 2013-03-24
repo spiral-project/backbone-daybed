@@ -294,10 +294,9 @@ var FormView = Backbone.View.extend({
     refresh: function () {
         for (f in this.instance.changed) {
             if (f == 'id') continue;
-            var formfield = this.$('[name='+ f + ']');
-            if (formfield.length == 0)
-                console.warn("Could not find form field '" + f + "'");
-            formfield.val(this.instance.get(f));
+            var attr = {};
+            attr[f] = this.instance.get(f);
+            this.form.setValue(attr);
         }
     }
 });

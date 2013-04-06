@@ -112,7 +112,8 @@ var AddView = FormView.extend({
         this.collection = this.options.collection;
         this.definition = this.options.definition;
         this.layer = null;
-        
+
+        // Assign dedicated layer editor from geometry field type
         var handlers = {
             'point': new L.Draw.Marker(this.map),
             'line': new L.Draw.Polyline(this.map),
@@ -122,6 +123,9 @@ var AddView = FormView.extend({
         if (!geomField) return;
         this.handler = handlers[geomField.type];
         this.map.on('draw:created', this.onDraw, this);
+
+        // Refresh newly created layer on form change
+        this.form.on('change', this.refreshNewLayer, this);
     },
 
     render: function () {
@@ -159,6 +163,7 @@ var AddView = FormView.extend({
 
     onDraw: function (e) {
         this.layer = e.layer;
+        this.refreshNewLayer();
         this.layer.addTo(this.map);
         this.$el.find('.map-help').remove();
 
@@ -169,6 +174,22 @@ var AddView = FormView.extend({
         }, this);
         this.layer.fire('edit');  // store once
     },
+
+    refreshNewLayer: function () {
+        if (!this.layer)
+            return;
+        var colorField = this.definition.colorField(),
+            iconField = this.definition.iconField();
+        var data = this.form.getValue(),
+            style = {color: data[colorField.name], fillColor: data[colorField.name]},
+            marker = {icon: data[iconField.name], color: data[colorField.name]};
+        // Refresh layer color
+        if (typeof this.layer.setStyle == 'function')
+            this.layer.setStyle(style);
+        // Refresh Marker color and icon
+        if (typeof this.layer.setIcon == 'function')
+            this.layer.setIcon(L.AwesomeMarkers.icon(marker));
+    }
 });
 
 

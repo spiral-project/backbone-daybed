@@ -243,9 +243,6 @@ var FormView = Backbone.View.extend({
             this.instance.definition = this.options.definition;
             this.instance.schema = this.options.definition.itemSchema();
         }
-        this.instance.on('change', this.refresh.bind(this));
-        this.instance.on('sync', this.success.bind(this));
-        this.instance.on('error', this.showErrors.bind(this));
         this.form = new Backbone.Form({
             model: this.instance
         });
@@ -255,6 +252,9 @@ var FormView = Backbone.View.extend({
         this.$el.html(this.template(this));
         this.$('#form').html(this.form.render().el);
         this.delegateEvents();
+        this.instance.on('change', this.refresh.bind(this));
+        this.instance.on('sync', this.success.bind(this));
+        this.instance.on('error', this.showErrors.bind(this));
         return this;
     },
 

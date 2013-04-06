@@ -197,7 +197,7 @@ var Definition = Backbone.Model.extend({
     templatePopup: function () {
         var c = '<div>';
         $(this.mainFields()).each(function (i, f) {
-            c += '<p>{{ ' + f.name + ' }}</p>'
+            c += '<li title="' + f.description + '"><strong>' + f.name + '</strong>: {{ ' + f.name + ' }}</li>';
         });
         c += '</div>';
         return Mustache.compile(c);

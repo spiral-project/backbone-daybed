@@ -314,6 +314,7 @@ var ListView = Backbone.View.extend({
                     map.panTo(layer.getLatLng());
                 else
                     map.fitBounds(layer.getBounds());
+                layer.openPopup();
             });
         }
     },

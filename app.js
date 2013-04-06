@@ -210,6 +210,7 @@ var ListView = Backbone.View.extend({
     initialize: function (definition) {
         this.definition = definition;
         this.map = null;
+        this.bounds = new L.LatLngBounds();
 
         this.collection = new ItemList(definition);
         this.collection.bind('add', this.addOne, this);

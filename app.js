@@ -182,17 +182,22 @@ var AddView = FormView.extend({
     refreshNewLayer: function () {
         if (!this.layer)
             return;
-        var colorField = this.definition.colorField(),
+        var style = L.Util.extend({}, settings.STYLES.default),
+            colorField = this.definition.colorField(),
             iconField = this.definition.iconField();
         var data = this.form.getValue(),
-            style = {color: data[colorField.name], fillColor: data[colorField.name]},
-            marker = {icon: data[iconField.name], color: data[colorField.name]};
+            color = colorField ? data[colorField.name] : style.color;
         // Refresh layer color
-        if (typeof this.layer.setStyle == 'function')
+        if (typeof this.layer.setStyle == 'function') {
+            style.color = color;
+            style.fillColor = color;
             this.layer.setStyle(style);
+        }
         // Refresh Marker color and icon
-        if (typeof this.layer.setIcon == 'function')
+        if (iconField && typeof this.layer.setIcon == 'function') {
+            var marker = {icon: data[iconField.name], color: color};
             this.layer.setIcon(L.AwesomeMarkers.icon(marker));
+        }
     }
 });
 

@@ -93,7 +93,11 @@ var DefinitionCreate = FormView.extend({
     },
 
     submit: function() {
+        // Since daybed definitions must be created with PUT.
+        // We make sure id is not lost.
+        var id = this.instance.get('id');
         FormView.prototype.submit.apply(this, arguments);
+        this.instance.set({'id': id});
         this.instance.save({wait: true});
     },
 

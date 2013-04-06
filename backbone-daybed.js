@@ -255,6 +255,7 @@ var FormView = Backbone.View.extend({
         this.instance.on('change', this.refresh.bind(this));
         this.instance.on('sync', this.success.bind(this));
         this.instance.on('error', this.showErrors.bind(this));
+        this.instance.trigger('change');
         return this;
     },
 

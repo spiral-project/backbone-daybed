@@ -61,6 +61,19 @@ var MapModel = Definition.extend({
         return schema;
     },
 
+    /**
+     * Override Defintion.mainFields() to remove color and icon (metaTypes)
+     * from list, except if the model has no geometry field.
+     */
+    mainFields: function () {
+        var mainFields = Definition.prototype.mainFields.call(this);
+        if (!this.geomField())
+            return mainFields;
+        return _.filter(mainFields, function (f) {
+            return f.meta === undefined;
+        });
+    },
+
     _getField: function (metatype) {
         return _.filter(this.attributes.fields,
                          function(f) { return f.meta == metatype })[0];

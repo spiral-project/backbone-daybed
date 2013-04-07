@@ -140,7 +140,12 @@ var DefinitionCreate = FormView.extend({
         this.instance.save({wait: true});
     },
 
-    success: function () {
+    /**
+     * On success, store token for later use, and redirect to list view.
+     */
+    success: function (model, response, options) {
+        var storage = window.localStorage || {};
+        storage["daybed.token." + this.modelname] = response.token;
         app.navigate(this.modelname, {trigger:true});
     },
 });
@@ -243,7 +248,9 @@ var AddView = FormView.extend({
 
 var ListView = Backbone.View.extend({
     template: Mustache.compile('<div id="map"></div>' + 
-                               '<h1>{{ definition.title }}</h1><p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
+                               '<h1>{{ definition.title }}</h1>' + 
+                               '{{#definition.token}}<div class="alert"><strong>Creation token</strong>: {{ definition.token }}</div>{{/definition.token}}' + 
+                               '<p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
                                '<div id="stats"><span class="count">0</span> items in total.</div>' +
                                '<div id="list"></div>'),
 
@@ -421,12 +428,18 @@ var DaybedMapApp = Backbone.Router.extend({
     list: function(modelname) {
         if (!this.definition || this.definition.modelname != modelname) {
             this.definition = new MapModel({id: modelname});
+
+            // Redirect to creation page if unknown
             var createIfMissing = function (model, xhr) {
                 if (xhr.status == 404) {
                     app.navigate(modelname + '/create', {trigger:true});
                 }
             };
             this.definition.fetch({error: createIfMissing});
+            
+            // Do we know its token already ?
+            var storage = window.localStorage || {};
+            this.definition.set('token', storage["daybed.token." + modelname]);
         }
         this.definition.whenReady(L.Util.bind(function () {
             var view = new ListView(this.definition);

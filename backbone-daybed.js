@@ -30,11 +30,6 @@ L.extend(L.GeoJSON, {
 
 
 var Item = Backbone.Model.extend({
-    popup: function () {
-        var tpl = this.definition.templatePopup();
-        return tpl(this.toJSON());
-    },
-
     getLayer: function () {
         if (!this.layer) {
             var geomfield = this.definition.geomField();
@@ -192,31 +187,6 @@ var Definition = Backbone.Model.extend({
                 return f;
         }
         return null;
-    },
-
-    templatePopup: function () {
-        var c = '<div>';
-        $(this.mainFields()).each(function (i, f) {
-            c += '<li title="' + f.description + '"><strong>' + f.name + '</strong>: {{ ' + f.name + ' }}</li>';
-        });
-        c += '</div>';
-        return Mustache.compile(c);
-    },
-
-    tableContent: function () {
-        var tpl = '<table class="table"><thead>' +
-                  '{{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}'+
-                  '</thead><tbody></tbody></table>';
-        return Mustache.compile(tpl)({fields: this.mainFields()});
-    },
-
-    templateRow: function () {
-        var c = '<tr data-id="{{ id }}">';
-        $(this.mainFields()).each(function (i, f) {
-            c += '<td>{{ ' + f.name + ' }}</td>'
-        });
-        c += '</tr>';
-        return Mustache.compile(c);
     },
 });
 

@@ -73,6 +73,31 @@ var MapModel = Definition.extend({
     iconField: function () {
         return this._getField('icon');
     },
+
+    templatePopup: function () {
+        var c = '<div>';
+        $(this.mainFields()).each(function (i, f) {
+            c += '<li title="' + f.description + '"><strong>' + f.name + '</strong>: {{ ' + f.name + ' }}</li>';
+        });
+        c += '</div>';
+        return Mustache.compile(c);
+    },
+
+    tableContent: function () {
+        var tpl = '<table class="table"><thead>' +
+                  '{{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}'+
+                  '</thead><tbody></tbody></table>';
+        return Mustache.compile(tpl)({fields: this.mainFields()});
+    },
+
+    templateRow: function () {
+        var c = '<tr data-id="{{ id }}">';
+        $(this.mainFields()).each(function (i, f) {
+            c += '<td>{{ ' + f.name + ' }}</td>'
+        });
+        c += '</tr>';
+        return Mustache.compile(c);
+    },
 });
 
 
@@ -276,7 +301,7 @@ var ListView = Backbone.View.extend({
                 layer.setStyle(style);
             }
 
-            layer.bindPopup(item.popup())
+            layer.bindPopup(this.definition.templatePopup()(item.toJSON()))
                  .addTo(this.map);
 
             // Will fit map on items

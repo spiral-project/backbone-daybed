@@ -375,7 +375,7 @@ var ListView = Backbone.View.extend({
 var HomeView = Backbone.View.extend({
     template: Mustache.compile('<div class="hero-unit"><h1>Daybed Map</h1>' + 
                                '<p>Join an existing map or create a new one.</p>' + 
-                               '<input id="modelname" placeholder="Name"/> <a href="#" class="btn">Go</a></div>'),
+                               '<input id="modelname" placeholder="Name"/> <a id="go" href="#" class="btn">Go</a></div>'),
 
     events: {
         "keyup input#modelname": "setLink",
@@ -383,11 +383,17 @@ var HomeView = Backbone.View.extend({
 
     render: function () {
         this.$el.html(this.template({}));
+        setTimeout(function () {
+            $('#modelname').focus();
+        }, 0);
         return this;
     },
 
     setLink: function (e) {
-        this.$el.find("a").attr("href", '#' + $(e.target).val());
+        if (e.which == 13) { // Enter
+            app.navigate($(e.target).val(), {trigger:true});
+        }
+        this.$("#go").attr("href", '#' + $(e.target).val());
     }
 });
 

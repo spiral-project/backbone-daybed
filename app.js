@@ -42,11 +42,12 @@ var MapModel = Definition.extend({
             'icon':  function () {
                 return { type: 'Select', options: [
                     {group: 'Location',
-                     options: ['home', 'music', 'medkit', 'camera-retro', 'info-sign', 'plane', ]},
+                     options: ['home', 'music', 'medkit', 'camera-retro',
+                               'info-sign', 'plane', 'shopping-cart']},
                     {group: 'Food & Drink',
-                     options: ['food', 'glass', 'coffee', ]},
+                     options: ['food', 'glass', 'coffee']},
                     {group: 'Symbols',
-                     options: ['flag', 'star', 'suitcase']},
+                     options: ['flag', 'star', 'suitcase', 'comments']},
                 ] } },
         };
         var schema = Definition.prototype.itemSchema.call(this);

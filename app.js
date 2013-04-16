@@ -339,7 +339,8 @@ var ListView = Backbone.View.extend({
             layer.on('mouseover', function (e) {
                 this.setStyle && this.setStyle(settings.STYLES.highlight);
                 // Pop on top
-                map.removeLayer(this).addLayer(this);
+                if (typeof this.bringToFront == 'function')
+                    this.bringToFront();
                 row.addClass('success')
                    .css("opacity", "0.1")
                    .animate({opacity: 1.0}, 400);

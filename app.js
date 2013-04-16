@@ -354,6 +354,8 @@ var ListView = Backbone.View.extend({
             });
 
             row.hoverIntent(function () {
+                if (typeof layer.bounce == 'function')
+                    layer.bounce(300, 50);
                 layer.fire('mouseover');
             },
             function () {

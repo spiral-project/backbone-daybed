@@ -315,7 +315,7 @@ var ListView = Backbone.View.extend({
                     color: style.color,
                     icon: item.get(iconField.name)
                 });
-                layer = L.marker(layer.getLatLng(), {icon: marker});
+                layer = L.marker(layer.getLatLng(), {icon: marker, autoBounce: true});
             }
             else {
                 layer.setStyle(style);

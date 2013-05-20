@@ -15,4 +15,4 @@
 	url = https://github.com/FortAwesome/Font-Awesome.git
 [submodule "libs/leaflet.bouncemarker"]
 	path = libs/leaflet.bouncemarker
-	url = https://github.com/makinacorpus/leaflet.bouncemarker.git
+	url = https://github.com/maximeh/leaflet.bouncemarker.git

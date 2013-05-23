@@ -1,18 +1,18 @@
 [submodule "libs/jquery-hoverIntent"]
 	path = libs/jquery-hoverIntent
-	url = https://github.com/briancherne/jquery-hoverIntent.git
+	url = git://github.com/briancherne/jquery-hoverIntent.git
 [submodule "libs/backbone-forms"]
 	path = libs/backbone-forms
-	url = https://github.com/powmedia/backbone-forms.git
+	url = git://github.com/powmedia/backbone-forms.git
 [submodule "libs/Leaflet.draw"]
 	path = libs/Leaflet.draw
-	url = https://github.com/Leaflet/Leaflet.draw.git
+	url = git://github.com/Leaflet/Leaflet.draw.git
 [submodule "libs/Leaflet.awesome-markers"]
 	path = libs/Leaflet.awesome-markers
-	url = https://github.com/lvoogdt/Leaflet.awesome-markers.git
+	url = git://github.com/lvoogdt/Leaflet.awesome-markers.git
 [submodule "libs/Font-Awesome"]
 	path = libs/Font-Awesome
-	url = https://github.com/FortAwesome/Font-Awesome.git
+	url = git://github.com/FortAwesome/Font-Awesome.git
 [submodule "libs/leaflet.bouncemarker"]
 	path = libs/leaflet.bouncemarker
-	url = https://github.com/maximeh/leaflet.bouncemarker.git
+	url = git://github.com/maximeh/leaflet.bouncemarker.git

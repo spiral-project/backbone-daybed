@@ -6,7 +6,11 @@ window.settings = window.settings || {
     TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 };
 
-/** Until the 42 issues and pull requests are fixed in Leaflet core */
+/** 
+ This now exists in Leaflet current master
+ https://github.com/Leaflet/Leaflet/pull/1462
+ Wait until stable version and remove :)
+*/
 L.extend(L.GeoJSON, {
     latLngsToCoords: function (layer) {
         var coords = function coords (latlng) {

@@ -3,7 +3,7 @@
  */
 window.settings = window.settings || {
     SERVER: "localhost:8000",
-    TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 };
 
 /** 
@@ -29,7 +29,7 @@ L.extend(L.GeoJSON, {
             return _.map(layer.getLatLngs(), function (latlng) {return coords(latlng);});
         }
         else throw "Could not export layer coordinates";
-    },
+    }
 });
 
 
@@ -38,11 +38,11 @@ var Item = Backbone.Model.extend({
         if (!this.layer) {
             var geomfield = this.definition.geomField();
             if (!geomfield) return;
-            
+
             var factories = {
                 'point': function (coords) {return L.circleMarker([coords[1], coords[0]]);},
                 'line': function (coords) {return L.polyline(L.GeoJSON.coordsToLatLngs(coords));},
-                'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));},
+                'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));}
             };
 
             var coords = this.get(geomfield.name);
@@ -58,11 +58,11 @@ var Item = Backbone.Model.extend({
         var geomfield = this.definition.geomField();
         if (!geomfield) return;
 
-        var coords = L.GeoJSON.latLngsToCoords(layer)
-          , attrs = {};
+        var coords = L.GeoJSON.latLngsToCoords(layer),
+            attrs = {};
         attrs[geomfield.name] = JSON.stringify(coords);
         this.set(attrs);
-    },
+    }
 });
 
 
@@ -88,7 +88,7 @@ var ItemList = Backbone.Collection.extend({
         var m = Backbone.Collection.prototype._prepareModel.apply(this, arguments);
         m.definition = this.definition;
         return m;
-    },
+    }
 });
 
 
@@ -130,22 +130,22 @@ var Definition = Backbone.Model.extend({
             'int': 'Number',
             'string': 'Text',
             'boolean': 'Checkbox'
-        }
+        };
         var geom = function (f) {
-            return {type: 'TextArea', 
+            return {type: 'TextArea',
                     editorAttrs: {style: 'display: none'},
                     help: f.description + ' <span>(on map)</span>'};
         };
         var fieldMapping = {
             'default': function (f) {
-                var d = {help: f.description}
-                  , t = typeMapping[f.type];
+                var d = {help: f.description},
+                    t = typeMapping[f.type];
                 if (t) d.type = t;
                 return d;
             },
             'decimal': function (f) {
                 var d = fieldMapping['default'](f);
-                d.editorAttrs = {pattern: '[-+]?[0-9]*\.?[0-9]+'};
+                d.editorAttrs = {pattern: '[-+]?[0-9]*\\.?[0-9]+'};
                 return d;
             },
             'email': function (f) {
@@ -160,13 +160,13 @@ var Definition = Backbone.Model.extend({
             },
             'point': geom,
             'line': geom,
-            'polygon': geom,
+            'polygon': geom
         };
         var schema = {};
         // Add Backbone.Forms fields from Daybed definition
         $(this.attributes.fields).each(function (i, field) {
-            var defaultschema = fieldMapping['default']
-              , build = fieldMapping[field.type] || defaultschema;
+            var defaultschema = fieldMapping['default'],
+                build = fieldMapping[field.type] || defaultschema;
             schema[field.name] = build(field);
         });
         return schema;
@@ -185,13 +185,13 @@ var Definition = Backbone.Model.extend({
      * Returns the first field whose type is Geometry.
      */
     geomField: function () {
-        for (i in this.attributes.fields) {
+        for (var i in this.attributes.fields) {
             var f = this.attributes.fields[i];
             if (f.type == 'point' || f.type == 'line' || f.type == 'polygon')
                 return f;
         }
         return null;
-    },
+    }
 });
 
 
@@ -208,7 +208,7 @@ var FormView = Backbone.View.extend({
 
     events: {
         "click #submit": "submit",
-        "click #cancel": "cancel",
+        "click #cancel": "cancel"
     },
 
     initialize: function () {
@@ -267,10 +267,10 @@ var FormView = Backbone.View.extend({
      * Refresh field values from instance attributes.
      */
     refresh: function () {
-        for (f in this.instance.changed) {
+        for (var f in this.instance.changed) {
             if (f == 'id') continue;
             var formfield = this.$('[name='+ f + ']');
-            if (formfield.length == 0)
+            if (formfield.length === 0)
                 console.warn("Could not find form field '" + f + "'");
             formfield.val(this.instance.get(f));
         }

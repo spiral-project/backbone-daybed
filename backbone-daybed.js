@@ -32,8 +32,16 @@ L.extend(L.GeoJSON, {
     }
 });
 
-
+//
+//  Item : a record
+//
 var Item = Backbone.Model.extend({
+    /**
+     * Returns instance layer, if its model has a geometry field.
+     * It basically builds a Leaflet layer, from the coordinates values
+     * stored in daybed record.
+     * @returns {L.Layer}
+     */
     getLayer: function () {
         if (!this.layer) {
             var geomfield = this.definition.geomField();
@@ -54,6 +62,10 @@ var Item = Backbone.Model.extend({
         return this.layer;
     },
 
+    /**
+     * Sets record geometry field from a Leaflet layer.
+     * @param {L.Layer} layer
+     */
     setLayer: function (layer) {
         var geomfield = this.definition.geomField();
         if (!geomfield) return;
@@ -92,11 +104,17 @@ var ItemList = Backbone.Collection.extend({
 });
 
 
+//
+//  Definition : a model
+//
 var Definition = Backbone.Model.extend({
     url: function () {
         return URI.build({hostname:settings.SERVER, path: 'definitions/' + this.id});
     },
 
+    /**
+     * Backbone.forms schema for Definition forms
+     */
     schema: {
         id:  { type: 'Hidden', title: '' },
         title: 'Text',
@@ -109,10 +127,17 @@ var Definition = Backbone.Model.extend({
         }}
     },
 
+    /**
+     * @returns {boolean} True if *Definition* is initialized (fetched from server)
+     */
     isReady: function () {
         return this.attributes.fields && this.attributes.fields.length > 0;
     },
 
+    /**
+     * Calls ``cb`` when *Definition* was fetched from server.
+     * @param {function} cb
+     */
     whenReady: function (cb) {
         if (this.isReady())
             cb();
@@ -123,6 +148,12 @@ var Definition = Backbone.Model.extend({
         }
     },
 
+    /**
+     * Builds a Backbone.forms schema from the *Definition* record, 
+     * for {Item} forms.
+     * For each model field, add a Backbone.forms declaration.
+     * @returns {Object}
+     */
     itemSchema: function () {
         if (!this.isReady())
             throw "Definition is not ready. Fetch it first.";
@@ -172,6 +203,10 @@ var Definition = Backbone.Model.extend({
         return schema;
     },
 
+    /**
+     * Returns field names that are not of type geometry.
+     * @returns {Array[string]}
+     */
     mainFields: function () {
         var geomField = this.geomField();
         if (!geomField)
@@ -183,6 +218,7 @@ var Definition = Backbone.Model.extend({
 
     /**
      * Returns the first field whose type is Geometry.
+     * @returns {string} ``null`` if no geometry field in *Definition*
      */
     geomField: function () {
         for (var i in this.attributes.fields) {
@@ -195,6 +231,9 @@ var Definition = Backbone.Model.extend({
 });
 
 
+//
+// FormView : Generic Backbone form
+//
 var FormView = Backbone.View.extend({
     model: null,
     tagName: "div",

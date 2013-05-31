@@ -103,7 +103,7 @@ var MapModel = Definition.extend({
     tableContent: function () {
         var tpl = '<table class="table"><thead>' +
                   '{{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}'+
-                  '</thead><tbody></tbody></table>';
+                  '<th>&nbsp;</th></thead><tbody></tbody></table>';
         return Mustache.compile(tpl)({fields: this.mainFields()});
     },
 
@@ -112,6 +112,7 @@ var MapModel = Definition.extend({
         $(this.mainFields()).each(function (i, f) {
             c += '<td>{{ ' + f.name + ' }}</td>'
         });
+        c += '<td><a href="#" class="close">x</a></td>';
         c += '</tr>';
         return Mustache.compile(c);
     },
@@ -260,6 +261,7 @@ var ListView = Backbone.View.extend({
 
     events: {
         "click a#add": "addForm",
+        "click a.close": "deleteItem",
     },
 
     initialize: function (definition) {
@@ -390,6 +392,18 @@ var ListView = Backbone.View.extend({
         if (this.bounds.isValid() && this.collection.length > 1)
             this.map.fitBounds(this.bounds);
     },
+
+    deleteItem: function (e) {
+        e.preventDefault();
+
+        var $row = $(e.target).parents('tr'),
+            id = $row.data('id'),
+            item = this.collection.get(id);
+        if (confirm("Are you sure ?") === true) {
+            item.destroy({wait: true});
+            $row.remove();
+        }
+    }
 });
 
 

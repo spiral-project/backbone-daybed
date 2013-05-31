@@ -6,6 +6,7 @@ settings.STYLES = settings.STYLES || {
 
 var MapModel = Definition.extend({
     metaTypes: {
+        'text': 'string',
         'color': 'string',
         'icon': 'string',
     },
@@ -33,6 +34,9 @@ var MapModel = Definition.extend({
 
     itemSchema: function () {
         var fieldMapping = {
+            'text': function () {
+                return { type: 'TextArea' }
+            },
             'color': function () {
                 return { type: 'Select', options: [
                     'red', 'blue', 'orange', 'green', 'purple',

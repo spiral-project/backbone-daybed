@@ -122,6 +122,7 @@ var Definition = Backbone.Model.extend({
         fields: { type: 'List', itemType: 'Object', subSchema: {
             name: { validators: ['required'] },
             description: { validators: ['required'] },
+            required: { type: 'Checkbox', editorAttrs: { 'checked' : 'checked' } },
             type: { type: 'Select', options: ['int', 'string', 'decimal', 'boolean',
                                               'email', 'url', 'point', 'line', 'polygon'] }
         }}

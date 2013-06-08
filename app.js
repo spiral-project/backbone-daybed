@@ -401,6 +401,8 @@ var ListView = Backbone.View.extend({
             item = this.collection.get(id);
         if (confirm("Are you sure ?") === true) {
             item.destroy({wait: true});
+            this.map.removeLayer(item.layer);
+            this.collection.remove(item);
             $row.remove();
         }
     }

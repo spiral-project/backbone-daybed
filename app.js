@@ -1,7 +1,9 @@
-settings.STYLES = settings.STYLES || {
-    default: {color: 'green', fillColor: 'green', opacity: 0.5},
-    highlight: {color: 'yellow', fillColor: 'yellow', opacity: 1.0},
-};
+window.DAYBED_SETTINGS.TILES = (window.DAYBED_SETTINGS.TILES || "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+
+window.DAYBED_SETTINGS.STYLES = L.Util.extend((window.DAYBED_SETTINGS.STYLES || {}), {
+    'default': {color: 'green', fillColor: 'green', opacity: 0.5},
+    'highlight': {color: 'yellow', fillColor: 'yellow', opacity: 1.0}
+});
 
 
 var MapModel = Definition.extend({
@@ -231,7 +233,7 @@ var AddView = FormView.extend({
     refreshNewLayer: function () {
         if (!this.layer)
             return;
-        var style = L.Util.extend({}, settings.STYLES.default),
+        var style = L.Util.extend({}, window.DAYBED_SETTINGS.STYLES.default),
             colorField = this.definition.colorField(),
             iconField = this.definition.iconField();
         var data = this.form.getValue(),
@@ -291,7 +293,7 @@ var ListView = Backbone.View.extend({
         if (this.definition.geomField() !== null) {
             this.map = L.map($map[0]).setView([0, 0], 3);
             this.map.attributionControl.setPrefix('');
-            L.tileLayer(settings.TILES).addTo(this.map);
+            L.tileLayer(window.DAYBED_SETTINGS.TILES).addTo(this.map);
             this.grouplayer.addTo(this.map);
         }
         else {
@@ -321,7 +323,7 @@ var ListView = Backbone.View.extend({
 
         var layer = item.getLayer();
         if (layer) {
-            var style = L.Util.extend({}, settings.STYLES.default);
+            var style = L.Util.extend({}, window.DAYBED_SETTINGS.STYLES.default);
 
             // Has color ?
             var colorField = this.definition.colorField();
@@ -348,7 +350,7 @@ var ListView = Backbone.View.extend({
             // Row and map items highlighting
             var row = this.$("tr[data-id='" + item.get('id') + "']");
             layer.on('mouseover', function (e) {
-                this.setStyle && this.setStyle(settings.STYLES.highlight);
+                this.setStyle && this.setStyle(window.DAYBED_SETTINGS.STYLES.highlight);
                 // Pop on top
                 if (typeof this.bringToFront == 'function')
                     this.bringToFront();

@@ -1,9 +1,8 @@
 /**
  * Default settings
  */
-window.settings = window.settings || {
-    SERVER: "localhost:8000",
-    TILES: "http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+window.DAYBED_SETTINGS = window.DAYBED_SETTINGS || {
+    SERVER: "localhost:8000"
 };
 
 /** 
@@ -86,7 +85,8 @@ var ItemList = Backbone.Collection.extend({
     },
 
     url: function () {
-        return URI.build({hostname:settings.SERVER, path: '/data/' + this.definition.id});
+        return URI.build({hostname: window.DAYBED_SETTINGS.SERVER,
+                          path: '/data/' + this.definition.id});
     },
 
     parse: function(response) {
@@ -109,7 +109,8 @@ var ItemList = Backbone.Collection.extend({
 //
 var Definition = Backbone.Model.extend({
     url: function () {
-        return URI.build({hostname:settings.SERVER, path: 'definitions/' + this.id});
+        return URI.build({hostname: DAYBED_SETTINGS.SERVER,
+                          path: 'definitions/' + this.id});
     },
 
     /**

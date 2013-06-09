@@ -267,11 +267,18 @@ var ListView = Backbone.View.extend({
     initialize: function (definition) {
         this.definition = definition;
         this.map = null;
-        this.bounds = new L.LatLngBounds();
+        this.grouplayer = L.featureGroup();
 
         this.collection = new ItemList(definition);
         this.collection.bind('add', this.addOne, this);
-        this.collection.bind('reset', this.addAll, this);
+        // Fit map to layer bounds when both collection and map are ready
+        this.collection.bind('sync', function () {
+            // Zoom-in effet
+            setTimeout((function () {
+                this.map.fitBounds(this.grouplayer.getBounds());
+            }).bind(this), 1500);
+        }, this);
+        // Fetch records!
         this.collection.fetch();
     },
 
@@ -285,6 +292,7 @@ var ListView = Backbone.View.extend({
             this.map = L.map($map[0]).setView([0, 0], 3);
             this.map.attributionControl.setPrefix('');
             L.tileLayer(settings.TILES).addTo(this.map);
+            this.grouplayer.addTo(this.map);
         }
         else {
             $map.hide();
@@ -334,19 +342,9 @@ var ListView = Backbone.View.extend({
                 layer.setStyle(style);
             }
 
-            layer.bindPopup(this.definition.templatePopup()(item.toJSON()))
-                 .addTo(this.map);
+            layer.bindPopup(this.definition.templatePopup()(item.toJSON()));
+            this.grouplayer.addLayer(layer);
 
-            // Will fit map on items
-            if (typeof layer.getLatLng == 'function') {
-                this.bounds.extend(layer.getLatLng());
-            }
-            else {
-                var bounds = layer.getBounds();
-                bounds.isValid() && this.bounds.extend(bounds);
-            }
-
-            var map = this.map;
             // Row and map items highlighting
             var row = this.$("tr[data-id='" + item.get('id') + "']");
             layer.on('mouseover', function (e) {
@@ -376,21 +374,15 @@ var ListView = Backbone.View.extend({
                 layer.fire('mouseout');
             });
 
+            var map = this.map;
             row.on('dblclick', function () {
-                if (layer.getLatLng)
+                if (typeof layer.getLatLng == 'function')
                     map.panTo(layer.getLatLng());
                 else
                     map.fitBounds(layer.getBounds());
                 layer.openPopup();
             });
         }
-    },
-
-    addAll: function () {
-        this.bounds = new L.LatLngBounds();
-        this.collection.each(this.addOne.bind(this));
-        if (this.bounds.isValid() && this.collection.length > 1)
-            this.map.fitBounds(this.bounds);
     },
 
     deleteItem: function (e) {

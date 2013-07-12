@@ -10,7 +10,7 @@ var MapModel = Definition.extend({
     metaTypes: {
         'text': 'string',
         'color': 'string',
-        'icon': 'string',
+        'icon': 'string'
     },
 
     initialize: function () {
@@ -23,7 +23,7 @@ var MapModel = Definition.extend({
     },
 
     save: function () {
-        // Substitute meta types by daybed
+        // Substitute meta types by daybed types
         $(this.attributes.fields).each(L.Util.bind(function (i, field) {
             var meta = this.metaTypes[field.type];
             if (meta) {
@@ -37,13 +37,13 @@ var MapModel = Definition.extend({
     itemSchema: function () {
         var fieldMapping = {
             'text': function () {
-                return { type: 'TextArea' }
+                return { type: 'TextArea' };
             },
             'color': function () {
                 return { type: 'Select', options: [
                     'red', 'blue', 'orange', 'green', 'purple',
                     'darkred', 'darkgreen', 'darkblue', 'darkpurple', 'cadetblue'
-                ] }
+                ] };
             },
             'icon':  function () {
                 return { type: 'Select', options: [
@@ -53,13 +53,13 @@ var MapModel = Definition.extend({
                     {group: 'Food & Drink',
                      options: ['food', 'glass', 'coffee']},
                     {group: 'Symbols',
-                     options: ['flag', 'star', 'suitcase', 'comments']},
-                ] } },
+                     options: ['flag', 'star', 'suitcase', 'comments']}
+                ] }; }
         };
         var schema = Definition.prototype.itemSchema.call(this);
         $(this.attributes.fields).each(function (i, field) {
             if (field.meta) {
-                var build = fieldMapping[field.meta]
+                var build = fieldMapping[field.meta];
                 if (build)
                     schema[field.name] = build(field);
             }
@@ -82,7 +82,7 @@ var MapModel = Definition.extend({
 
     _getField: function (metatype) {
         return _.filter(this.attributes.fields,
-                         function(f) { return f.meta == metatype })[0];
+                        function(f) { return f.meta == metatype; })[0];
     },
 
     colorField: function () {
@@ -112,12 +112,12 @@ var MapModel = Definition.extend({
     templateRow: function () {
         var c = '<tr data-id="{{ id }}">';
         $(this.mainFields()).each(function (i, f) {
-            c += '<td>{{ ' + f.name + ' }}</td>'
+            c += '<td>{{ ' + f.name + ' }}</td>';
         });
         c += '<td><a href="#" class="close">x</a></td>';
         c += '</tr>';
         return Mustache.compile(c);
-    },
+    }
 });
 
 
@@ -154,7 +154,7 @@ var DefinitionCreate = FormView.extend({
         var storage = window.localStorage || {};
         storage["daybed.token." + this.modelname] = response.token;
         app.navigate(this.modelname, {trigger:true});
-    },
+    }
 });
 
 
@@ -233,7 +233,7 @@ var AddView = FormView.extend({
     refreshNewLayer: function () {
         if (!this.layer)
             return;
-        var style = L.Util.extend({}, window.DAYBED_SETTINGS.STYLES.default),
+        var style = L.Util.extend({}, window.DAYBED_SETTINGS.STYLES['default']),
             colorField = this.definition.colorField(),
             iconField = this.definition.iconField();
         var data = this.form.getValue(),
@@ -254,16 +254,16 @@ var AddView = FormView.extend({
 
 
 var ListView = Backbone.View.extend({
-    template: Mustache.compile('<div id="map"></div>' + 
-                               '<h1>{{ definition.title }}</h1>' + 
-                               '{{#definition.token}}<div class="alert"><strong>Creation token</strong>: {{ definition.token }}</div>{{/definition.token}}' + 
-                               '<p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' + 
+    template: Mustache.compile('<div id="map"></div>' +
+                               '<h1>{{ definition.title }}</h1>' +
+                               '{{#definition.token}}<div class="alert"><strong>Creation token</strong>: {{ definition.token }}</div>{{/definition.token}}' +
+                               '<p>{{ definition.description }}</p><div id="toolbar"><a id="add" class="btn">Add</a></div>' +
                                '<div id="stats"><span class="count">0</span> items in total.</div>' +
                                '<div id="list"></div>'),
 
     events: {
         "click a#add": "addForm",
-        "click a.close": "deleteItem",
+        "click a.close": "deleteItem"
     },
 
     initialize: function (definition) {
@@ -305,7 +305,7 @@ var ListView = Backbone.View.extend({
 
     addForm: function (e) {
         e.preventDefault();
-        
+
         this.addView = new AddView({map:this.map,
                                     definition:this.definition,
                                     collection:this.collection});
@@ -323,7 +323,7 @@ var ListView = Backbone.View.extend({
 
         var layer = item.getLayer();
         if (layer) {
-            var style = L.Util.extend({}, window.DAYBED_SETTINGS.STYLES.default);
+            var style = L.Util.extend({}, window.DAYBED_SETTINGS.STYLES['default']);
 
             // Has color ?
             var colorField = this.definition.colorField();
@@ -350,7 +350,7 @@ var ListView = Backbone.View.extend({
             // Row and map items highlighting
             var row = this.$("tr[data-id='" + item.get('id') + "']");
             layer.on('mouseover', function (e) {
-                this.setStyle && this.setStyle(window.DAYBED_SETTINGS.STYLES.highlight);
+                if (this.setStyle) this.setStyle(window.DAYBED_SETTINGS.STYLES.highlight);
                 // Pop on top
                 if (typeof this.bringToFront == 'function')
                     this.bringToFront();
@@ -359,12 +359,12 @@ var ListView = Backbone.View.extend({
                    .animate({opacity: 1.0}, 400);
             }, layer);
             layer.on('mouseout',  function (e) {
-                this.setStyle && this.setStyle(style);
+                if (this.setStyle) this.setStyle(style);
                 row.removeClass('success');
             }, layer);
 
             layer.on('click', function (e) {
-                window.scrollTo(0, row.offset().top)
+                window.scrollTo(0, row.offset().top);
             });
 
             row.hoverIntent(function () {
@@ -404,12 +404,12 @@ var ListView = Backbone.View.extend({
 
 
 var HomeView = Backbone.View.extend({
-    template: Mustache.compile('<div class="hero-unit"><h1>Daybed Map</h1>' + 
-                               '<p>Join an existing map or create a new one.</p>' + 
+    template: Mustache.compile('<div class="hero-unit"><h1>Daybed Map</h1>' +
+                               '<p>Join an existing map or create a new one.</p>' +
                                '<input id="modelname" placeholder="Name"/> <a id="go" href="#" class="btn">Go</a></div>'),
 
     events: {
-        "keyup input#modelname": "setLink",
+        "keyup input#modelname": "setLink"
     },
 
     render: function () {
@@ -434,7 +434,7 @@ var DaybedMapApp = Backbone.Router.extend({
     routes: {
         "":                    "home",
         ":modelname/create":   "create",
-        ":modelname":          "list",
+        ":modelname":          "list"
     },
 
     initialize: function () {
@@ -460,7 +460,7 @@ var DaybedMapApp = Backbone.Router.extend({
                 }
             };
             this.definition.fetch({error: createIfMissing});
-            
+
             // Do we know its token already ?
             var storage = window.localStorage || {};
             this.definition.set('token', storage["daybed.token." + modelname]);
@@ -470,5 +470,5 @@ var DaybedMapApp = Backbone.Router.extend({
             $("#content").html(view.el);  // Leaflet needs its container in DOM
             view.render();
         }, this));
-    },
+    }
 });

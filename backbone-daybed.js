@@ -5,32 +5,6 @@ window.DAYBED_SETTINGS = window.DAYBED_SETTINGS || {
     SERVER: "localhost:8000"
 };
 
-/** 
- This now exists in Leaflet current master
- https://github.com/Leaflet/Leaflet/pull/1462
- Wait until stable version and remove :)
-*/
-L.extend(L.GeoJSON, {
-    latLngsToCoords: function (layer) {
-        var coords = function coords (latlng) {
-            return [latlng.lng, latlng.lat];
-        };
-        if (layer.getLatLng) {
-            return coords(layer.getLatLng());
-        }
-        else if (layer instanceof L.Polygon) {
-            // A polygon can theorically have holes, thus list of rings.
-            return [_.map(layer.getLatLngs(), function (latlng) {
-                return coords(latlng);
-            })];
-        }
-        else if (layer instanceof L.Polyline) {
-            return _.map(layer.getLatLngs(), function (latlng) {return coords(latlng);});
-        }
-        else throw "Could not export layer coordinates";
-    }
-});
-
 //
 //  Item : a record
 //
@@ -69,7 +43,7 @@ var Item = Backbone.Model.extend({
         var geomfield = this.definition.geomField();
         if (!geomfield) return;
 
-        var coords = L.GeoJSON.latLngsToCoords(layer),
+        var coords = layer.toGeoJSON().geometry.coordinates,
             attrs = {};
         attrs[geomfield.name] = JSON.stringify(coords);
         this.set(attrs);
@@ -293,11 +267,11 @@ var FormView = Backbone.View.extend({
     showErrors: function (model, xhr, options) {
         try {
             var descriptions = JSON.parse(xhr.responseText);
-            $(descriptions.errors).each(L.Util.bind(function (i, e) {
+            $(descriptions.errors).each((function (i, e) {
                 var name = e.name.split('.')[0];
                 this.$el.find("[name='" + name + "']")
                     .after(this.templateError({msg: e.description}));
-            }, this));
+            }).bind(this));
         }
         catch (e) {
             this.$el.html(this.templateError({msg: xhr.responseText}));

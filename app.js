@@ -91,32 +91,6 @@ var MapModel = Definition.extend({
 
     iconField: function () {
         return this._getField('icon');
-    },
-
-    templatePopup: function () {
-        var c = '<div>';
-        $(this.mainFields()).each(function (i, f) {
-            c += '<li title="' + f.description + '"><strong>' + f.name + '</strong>: {{ ' + f.name + ' }}</li>';
-        });
-        c += '</div>';
-        return Mustache.compile(c);
-    },
-
-    tableContent: function () {
-        var tpl = '<table class="table"><thead>' +
-                  '{{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}'+
-                  '<th>&nbsp;</th></thead><tbody></tbody></table>';
-        return Mustache.compile(tpl)({fields: this.mainFields()});
-    },
-
-    templateRow: function () {
-        var c = '<tr data-id="{{ id }}">';
-        $(this.mainFields()).each(function (i, f) {
-            c += '<td>{{ ' + f.name + ' }}</td>';
-        });
-        c += '<td><a href="#" class="close">x</a></td>';
-        c += '</tr>';
-        return Mustache.compile(c);
     }
 });
 
@@ -286,7 +260,7 @@ var ListView = Backbone.View.extend({
 
     render: function () {
         this.$el.html(this.template({definition: this.definition.attributes}));
-        this.$("#list").html(this.definition.tableContent());
+        this.$("#list").html(this.tableContent(this.definition));
 
         // If definition contains geometry field, shows the map.
         var $map = this.$("#map");
@@ -317,7 +291,7 @@ var ListView = Backbone.View.extend({
     },
 
     addOne: function (item) {
-        var tpl = this.definition.templateRow();
+        var tpl = this.templateRow(this.definition);
         this.$('table tbody').prepend(tpl(item.toJSON()));
         this.$('span.count').html(this.collection.length);
 
@@ -344,7 +318,7 @@ var ListView = Backbone.View.extend({
                 layer.setStyle(style);
             }
 
-            layer.bindPopup(this.definition.templatePopup()(item.toJSON()));
+            layer.bindPopup(this.templatePopup(this.definition)(item.toJSON()));
             this.grouplayer.addLayer(layer);
 
             // Row and map items highlighting
@@ -399,6 +373,32 @@ var ListView = Backbone.View.extend({
             this.collection.remove(item);
             $row.remove();
         }
+    },
+
+    templatePopup: function (definition) {
+        var c = '<div>';
+        $(definition.mainFields()).each(function (i, f) {
+            c += '<li title="' + f.description + '"><strong>' + f.name + '</strong>: {{ ' + f.name + ' }}</li>';
+        });
+        c += '</div>';
+        return Mustache.compile(c);
+    },
+
+    tableContent: function (definition) {
+        var tpl = '<table class="table"><thead>' +
+                  '{{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}' +
+                  '<th>&nbsp;</th></thead><tbody></tbody></table>';
+        return Mustache.compile(tpl)({fields: definition.mainFields()});
+    },
+
+    templateRow: function (definition) {
+        var c = '<tr data-id="{{ id }}">';
+        $(definition.mainFields()).each(function (i, f) {
+            c += '<td>{{ ' + f.name + ' }}</td>';
+        });
+        c += '<td><a href="#" class="close">x</a></td>';
+        c += '</tr>';
+        return Mustache.compile(c);
     }
 });
 

@@ -99,11 +99,6 @@ var Definition = Backbone.Model.extend({
             'string': 'Text',
             'boolean': 'Checkbox'
         };
-        var geom = function (f) {
-            return {type: 'TextArea',
-                    editorAttrs: {style: 'display: none'},
-                    help: f.description + ' <span>(on map)</span>'};
-        };
         var fieldMapping = {
             'default': function (f) {
                 var d = {help: f.description},
@@ -125,10 +120,7 @@ var Definition = Backbone.Model.extend({
                 var d = fieldMapping['default'](f);
                 d.validators = ['required', 'url'];
                 return d;
-            },
-            'point': geom,
-            'line': geom,
-            'polygon': geom
+            }
         };
         var schema = {};
         // Add Backbone.Forms fields from Daybed definition
@@ -138,32 +130,6 @@ var Definition = Backbone.Model.extend({
             schema[field.name] = build(field);
         });
         return schema;
-    },
-
-    /**
-     * Returns field names that are not of type geometry.
-     * @returns {Array[string]}
-     */
-    mainFields: function () {
-        var geomField = this.geomField();
-        if (!geomField)
-            return this.attributes.fields;
-        return this.attributes.fields.filter(function (f) {
-            return f.name != geomField.name;
-        });
-    },
-
-    /**
-     * Returns the first field whose type is Geometry.
-     * @returns {string} ``null`` if no geometry field in *Definition*
-     */
-    geomField: function () {
-        for (var i in this.attributes.fields) {
-            var f = this.attributes.fields[i];
-            if (f.type == 'point' || f.type == 'line' || f.type == 'polygon')
-                return f;
-        }
-        return null;
     }
 });
 

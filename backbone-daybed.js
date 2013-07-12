@@ -172,7 +172,7 @@ var Definition = Backbone.Model.extend({
 // FormView : Generic Backbone form
 //
 var FormView = Backbone.View.extend({
-    model: null,
+    model: Item,
     tagName: "div",
     className: "well",
 

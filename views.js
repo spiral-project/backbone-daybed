@@ -36,7 +36,7 @@ var DefinitionCreate = FormView.extend({
 
 
 var AddView = FormView.extend({
-    model: Item,
+    model: MapItem,
 
     initialize: function () {
         FormView.prototype.initialize.call(this);
@@ -148,7 +148,7 @@ var ListView = Backbone.View.extend({
         this.map = null;
         this.grouplayer = L.featureGroup();
 
-        this.collection = new ItemList(definition);
+        this.collection = new MapItemList(definition);
         this.collection.bind('add', this.addOne, this);
         // Fit map to layer bounds when both collection and map are ready
         this.collection.bind('sync', function () {

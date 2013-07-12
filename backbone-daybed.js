@@ -9,45 +9,6 @@ window.DAYBED_SETTINGS = window.DAYBED_SETTINGS || {
 //  Item : a record
 //
 var Item = Backbone.Model.extend({
-    /**
-     * Returns instance layer, if its model has a geometry field.
-     * It basically builds a Leaflet layer, from the coordinates values
-     * stored in daybed record.
-     * @returns {L.Layer}
-     */
-    getLayer: function () {
-        if (!this.layer) {
-            var geomfield = this.definition.geomField();
-            if (!geomfield) return;
-
-            var factories = {
-                'point': function (coords) {return L.circleMarker([coords[1], coords[0]]);},
-                'line': function (coords) {return L.polyline(L.GeoJSON.coordsToLatLngs(coords));},
-                'polygon': function (coords) {return L.polygon(L.GeoJSON.coordsToLatLngs(coords[0]));}
-            };
-
-            var coords = this.get(geomfield.name);
-            if (typeof coords === 'string') {
-                coords = JSON.parse(coords);
-            }
-            this.layer = factories[geomfield.type](coords);
-        }
-        return this.layer;
-    },
-
-    /**
-     * Sets record geometry field from a Leaflet layer.
-     * @param {L.Layer} layer
-     */
-    setLayer: function (layer) {
-        var geomfield = this.definition.geomField();
-        if (!geomfield) return;
-
-        var coords = layer.toGeoJSON().geometry.coordinates,
-            attrs = {};
-        attrs[geomfield.name] = JSON.stringify(coords);
-        this.set(attrs);
-    }
 });
 
 

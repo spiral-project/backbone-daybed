@@ -43,11 +43,6 @@ var ItemList = Backbone.Collection.extend({
 //  Definition : a model
 //
 var Definition = Backbone.Model.extend({
-    url: function () {
-        return URI.build({hostname: DAYBED_SETTINGS.SERVER,
-                          path: 'definitions/' + this.id});
-    },
-
     /**
      * Backbone.forms schema for Definition forms
      */
@@ -62,6 +57,39 @@ var Definition = Backbone.Model.extend({
             type: { type: 'Select', options: ['int', 'string', 'decimal', 'boolean',
                                               'email', 'url', 'point', 'line', 'polygon'] }
         }}
+    },
+
+    /**
+     * Meta-types are fake types. Daybed does not know them.
+     */
+    metaTypes: {
+        'text': 'string'
+    },
+
+    initialize: function () {
+        // Add meta types to schema choice list
+        var choices = this.schema.fields.subSchema.type.options;
+        for (var metatype in this.metaTypes) {
+            if (!_.contains(choices, metatype))
+                choices.push(metatype);
+        }
+    },
+
+    save: function () {
+        // Substitute meta types by daybed types
+        $(this.attributes.fields).each((function (i, field) {
+            var meta = this.metaTypes[field.type];
+            if (meta) {
+                field.meta = field.type;
+                field.type = meta;
+            }
+        }).bind(this));
+        Backbone.Model.prototype.save.apply(this, arguments);
+    },
+
+    url: function () {
+        return URI.build({hostname: DAYBED_SETTINGS.SERVER,
+                          path: 'definitions/' + this.id});
     },
 
     /**
@@ -106,6 +134,9 @@ var Definition = Backbone.Model.extend({
                 if (t) d.type = t;
                 return d;
             },
+            'text': function () {
+                return { type: 'TextArea' };
+            },
             'decimal': function (f) {
                 var d = fieldMapping['default'](f);
                 d.editorAttrs = {pattern: '[-+]?[0-9]*\\.?[0-9]+'};
@@ -123,11 +154,11 @@ var Definition = Backbone.Model.extend({
             }
         };
         var schema = {};
-        // Add Backbone.Forms fields from Daybed definition
+        // Backbone.Forms fields from this Daybed definition
         $(this.attributes.fields).each(function (i, field) {
-            var defaultschema = fieldMapping['default'],
-                build = fieldMapping[field.type] || defaultschema;
-            schema[field.name] = build(field);
+            var build = fieldMapping[field.meta || field.type];
+            schema[field.name] = (build ?
+                                  build(field) : fieldMapping['default'](field));
         });
         return schema;
     }

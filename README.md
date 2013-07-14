@@ -33,15 +33,13 @@ Initalize form in ``<div>`` container :
 
 ```javascript
 
-    window.DAYBED_SETTINGS = {SERVER: "localhost:8000"};
+    Daybed.SETTINGS.SERVER = "localhost:8000";
 
-    var ID = 'fefefe',
-        definition = new Definition({id: ID});
-    definition.whenReady(function () {
-        var view = new FormView({definition: definition});
-        $("#form-holder").html(view.render().el);
-    });
-    definition.fetch();
+    var form = Daybed.renderForm('#form-holder', {id: 'your-model-id'});
+
+    form.on('success', function (record) {
+        $("#form-holder").html(record.id + " was saved succesfully.");
+    })
 
 ```
 

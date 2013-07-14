@@ -1,30 +1,37 @@
+(function (Backbone, _, $, undefined) {
+"use strict";
+
+Backbone.$ = $;
+
+window.Daybed = window.Daybed || {};
+
 /**
  * Default settings
  */
-window.DAYBED_SETTINGS = window.DAYBED_SETTINGS || {
+Daybed.SETTINGS = {
     SERVER: "localhost:8000"
 };
 
 //
 //  Item : a record
 //
-var Item = Backbone.Model.extend({
+Daybed.Item = Backbone.Model.extend({
     url: function () {
-        return URI.build({hostname: window.DAYBED_SETTINGS.SERVER,
+        return URI.build({hostname: Daybed.SETTINGS.SERVER,
                           path: '/data/' + this.definition.id});
     }
 });
 
 
-var ItemList = Backbone.Collection.extend({
-    model: Item,
+Daybed.ItemList = Backbone.Collection.extend({
+    model: Daybed.Item,
 
     initialize: function (definition) {
         this.definition = definition;
     },
 
     url: function () {
-        return URI.build({hostname: window.DAYBED_SETTINGS.SERVER,
+        return URI.build({hostname: Daybed.SETTINGS.SERVER,
                           path: '/data/' + this.definition.id});
     },
 
@@ -46,7 +53,7 @@ var ItemList = Backbone.Collection.extend({
 //
 //  Definition : a model
 //
-var Definition = Backbone.Model.extend({
+Daybed.Definition = Backbone.Model.extend({
     /**
      * Backbone.forms schema for Definition forms
      */
@@ -92,7 +99,7 @@ var Definition = Backbone.Model.extend({
     },
 
     url: function () {
-        return URI.build({hostname: DAYBED_SETTINGS.SERVER,
+        return URI.build({hostname: Daybed.SETTINGS.SERVER,
                           path: 'definitions/' + this.id});
     },
 
@@ -172,11 +179,10 @@ var Definition = Backbone.Model.extend({
 //
 // FormView : Generic Backbone form
 //
-var FormView = Backbone.View.extend({
-    model: Item,
+Daybed.FormView = Backbone.View.extend({
+    model: Daybed.Item,
     tagName: "div",
     className: "well",
-    title: "",
 
     template: Mustache.compile('<h2>{{ title }}</h2>' +
                                '<div class="form"></div>' +
@@ -190,15 +196,27 @@ var FormView = Backbone.View.extend({
     },
 
     initialize: function () {
+        this.form = null;
         this.instance = new this.model({});
-        if (!this.instance.schema && this.options.definition) {
-            this.instance.schema = this.options.definition.itemSchema();
-            this.instance.definition = this.options.definition;
+
+        var definition = this.options.definition;
+        if (definition) {
+            // Associate definition to instance, only if not any yet
+            if (!this.instance.definition) {
+                this.instance.definition = definition;
+            }
         }
         else {
-            console.warn("No schema found. Provide Definition object.");
+            // Use definition of instance
+            definition = this.instance.definition;
         }
-        this.title = "Create " + this.instance.definition.attributes.title;
+        console.assert(definition, "No Definition provided.");
+        definition.whenReady(this._setup.bind(this));
+    },
+
+    _setup: function () {
+        this.instance.schema = this.instance.definition.itemSchema();
+        this.title = this.options.title || "Create " + this.instance.definition.attributes.title;
 
         // Underlying backbone-forms object
         this.form = new Backbone.Form({
@@ -214,6 +232,8 @@ var FormView = Backbone.View.extend({
         this.instance.on('sync', this.success.bind(this));
         this.instance.on('error', this.error.bind(this));
         this.instance.trigger('change');
+
+        this.trigger('render');
         return this;
     },
 
@@ -276,3 +296,22 @@ var FormView = Backbone.View.extend({
         }
     }
 });
+
+
+/**
+ * Form rendering helper
+ */
+Daybed.renderForm = function (selector, options) {
+    var definition = new Daybed.Definition(options),
+        formView = new Daybed.FormView({definition: definition});
+
+    definition.whenReady(function () {
+        $(selector).html(formView.render().el);
+    });
+
+    definition.fetch();
+    return formView;
+};
+
+
+})(Backbone.noConflict(),  _.noConflict(), jQuery);

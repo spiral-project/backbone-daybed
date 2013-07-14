@@ -176,24 +176,31 @@ var FormView = Backbone.View.extend({
     model: Item,
     tagName: "div",
     className: "well",
+    title: "",
 
     template: Mustache.compile('<h2>{{ title }}</h2>' +
-                               '<div id="form"></div>' +
-                               '<a id="cancel" class="btn">Cancel</a> ' +
-                               '<a id="submit" class="btn btn-success">Save</a>'),
+                               '<div class="form"></div>' +
+                               '<a class="btn cancel" href="#">Cancel</a> ' +
+                               '<a class="btn submit btn-success" href="#">Save</a>'),
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
 
     events: {
-        "click #submit": "submit",
-        "click #cancel": "cancel"
+        "click .submit": "submit",
+        "click .cancel": "cancel"
     },
 
     initialize: function () {
         this.instance = new this.model({});
         if (!this.instance.schema && this.options.definition) {
-            this.instance.definition = this.options.definition;
             this.instance.schema = this.options.definition.itemSchema();
+            this.instance.definition = this.options.definition;
         }
+        else {
+            console.warn("No schema found. Provide Definition object.");
+        }
+        this.title = "Create " + this.instance.definition.attributes.title;
+
+        // Underlying backbone-forms object
         this.form = new Backbone.Form({
             model: this.instance
         });
@@ -201,11 +208,11 @@ var FormView = Backbone.View.extend({
 
     render: function () {
         this.$el.html(this.template(this));
-        this.$('#form').html(this.form.render().el);
+        this.$('.form').html(this.form.render().el);
         this.delegateEvents();
         this.instance.on('change', this.refresh.bind(this));
         this.instance.on('sync', this.success.bind(this));
-        this.instance.on('error', this.showErrors.bind(this));
+        this.instance.on('error', this.error.bind(this));
         this.instance.trigger('change');
         return this;
     },
@@ -233,18 +240,27 @@ var FormView = Backbone.View.extend({
         return false;
     },
 
-    showErrors: function (model, xhr, options) {
+    error: function (model, response, options) {
         try {
-            var descriptions = JSON.parse(xhr.responseText);
-            $(descriptions.errors).each((function (i, e) {
-                var name = e.name.split('.')[0];
-                this.$el.find("[name='" + name + "']")
-                    .after(this.templateError({msg: e.description}));
-            }).bind(this));
+            this.showErrors(JSON.parse(response.responseText));
         }
         catch (e) {
-            this.$el.html(this.templateError({msg: xhr.responseText}));
+            this.$el.html(this.templateError({msg: response.responseText}));
         }
+
+        this.trigger('error', model);
+        return false;
+    },
+
+    /**
+     * Show each error along its field
+     */
+    showErrors: function (descriptions) {
+        $(descriptions.errors).each((function (i, e) {
+            var name = e.name.split('.')[0];
+            this.$("[name='" + name + "']")
+                .after(this.templateError({msg: e.description}));
+        }).bind(this));
     },
 
     /**
@@ -253,7 +269,7 @@ var FormView = Backbone.View.extend({
     refresh: function () {
         for (var f in this.instance.changed) {
             if (f == 'id') continue;
-            var formfield = this.$('[name='+ f + ']');
+            var formfield = this.$("[name='"+ f + "']");
             if (formfield.length === 0)
                 console.warn("Could not find form field '" + f + "'");
             formfield.val(this.instance.get(f));

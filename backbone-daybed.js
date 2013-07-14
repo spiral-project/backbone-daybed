@@ -9,6 +9,10 @@ window.DAYBED_SETTINGS = window.DAYBED_SETTINGS || {
 //  Item : a record
 //
 var Item = Backbone.Model.extend({
+    url: function () {
+        return URI.build({hostname: window.DAYBED_SETTINGS.SERVER,
+                          path: '/data/' + this.definition.id});
+    }
 });
 
 
@@ -213,12 +217,19 @@ var FormView = Backbone.View.extend({
 
     submit: function(e) {
         e.preventDefault();
-        this.$el.find('.field-error').remove();
+        // Hide previous validation errors (if any)
+        this.$('.field-error').remove();
+        // Serialize form fields
+        var data = this.form.getValue();
+        this.trigger('submit', data);
+        // Store form data into instance, and save it
         this.form.commit();
+        this.instance.save();
         return false;
     },
 
     success: function (model, response, options) {
+        this.trigger('success', model);
         return false;
     },
 

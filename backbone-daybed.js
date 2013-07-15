@@ -239,6 +239,7 @@ Daybed.FormView = Backbone.View.extend({
 
     cancel: function (e) {
         e.preventDefault();
+        this.$('form')[0].reset();
         return false;
     },
 

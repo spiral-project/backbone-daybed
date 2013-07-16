@@ -238,7 +238,7 @@ Daybed.FormView = Backbone.View.extend({
         this.creation = this.instance.attributes.id === undefined;
 
         this.title = this.options.title ||
-                     (this.creation ? "Create " : "Edit ") + this.definition.attributes.title;
+                     (this.creation ? "Create " : "Edit ") + this.definition.attributes.title.toLowerCase();
 
         // Underlying backbone-forms object
         this.form = new Backbone.Form({

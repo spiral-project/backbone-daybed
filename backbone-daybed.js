@@ -49,6 +49,16 @@ Daybed.ItemList = Backbone.Collection.extend({
     },
 
     /**
+     * Fetch only once Definition is ready.
+     */
+    fetch: function () {
+        var args = Array.prototype.slice.call(arguments);
+        this.definition.whenReady((function () {
+            Backbone.Collection.prototype.fetch.apply(this, args);
+        }).bind(this));
+    },
+
+    /**
      * Override instanciation to link with Definition instance.
      */
     _prepareModel: function () {

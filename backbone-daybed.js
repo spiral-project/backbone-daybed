@@ -256,7 +256,7 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     cancel: function (e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         this.trigger('cancel');
         this.reset();
         return false;
@@ -267,7 +267,7 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     submit: function(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         // Serialize form fields
         var data = this.form.getValue();
         this.trigger('submit', data);

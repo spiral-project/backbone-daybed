@@ -225,19 +225,19 @@ Daybed.FormView = Backbone.View.extend({
         this.form = null;
         this.instance = new this.model({});
 
-        var definition = this.options.definition;
-        if (definition) {
+        this.definition = this.options.definition;
+        if (this.definition) {
             // Associate definition to instance, only if not any yet
             if (!this.instance.definition) {
-                this.instance.definition = definition;
+                this.instance.definition = this.definition;
             }
         }
         else {
             // Use definition of instance
-            definition = this.instance.definition;
+            this.definition = this.instance.definition;
         }
-        console.assert(definition, "No Definition provided.");
-        definition.whenReady(this._setup.bind(this));
+        console.assert(this.definition, "No Definition provided.");
+        this.definition.whenReady(this._setup.bind(this));
     },
 
     _setup: function () {

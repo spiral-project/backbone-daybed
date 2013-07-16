@@ -19,6 +19,15 @@ Daybed.Item = Backbone.Model.extend({
     url: function () {
         return URI.build({hostname: Daybed.SETTINGS.SERVER,
                           path: '/data/' + this.definition.id});
+    },
+
+    /**
+     * Fields values
+     */
+    fieldsValues: function () {
+        var columns = this.definition.fieldsNames(),
+            fields = _.pick.apply(_, ([this.attributes]).concat(columns));
+        return _.values(fields);
     }
 });
 
@@ -35,14 +44,14 @@ Daybed.ItemList = Backbone.Collection.extend({
                           path: '/data/' + this.definition.id});
     },
 
-    parse: function(response) {
+    parse: function (response) {
         return response.data;
     },
 
     /**
      * Override instanciation to link with Definition instance.
      */
-    _prepareModel: function() {
+    _prepareModel: function () {
         var m = Backbone.Collection.prototype._prepareModel.apply(this, arguments);
         m.definition = this.definition;
         return m;
@@ -122,6 +131,13 @@ Daybed.Definition = Backbone.Model.extend({
                 this.whenReady(cb);
             }, this);
         }
+    },
+
+    /**
+     * Fields names
+     */
+    fieldsNames: function () {
+        return _.pluck(this.attributes.fields, 'name');
     },
 
     /**

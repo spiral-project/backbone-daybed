@@ -222,44 +222,36 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     initialize: function () {
-        this.form = null;
-        this.instance = new this.model({});
-
-        this.definition = this.options.definition;
-        if (this.definition) {
-            // Associate definition to instance, only if not any yet
-            if (!this.instance.definition) {
-                this.instance.definition = this.definition;
-            }
-        }
-        else {
-            // Use definition of instance
-            this.definition = this.instance.definition;
-        }
-        console.assert(this.definition, "No Definition provided.");
-        this.definition.whenReady(this._setup.bind(this));
+        this.definition = this.options.definition || this.options.instance.definition;
+        this.definition.whenReady(this.setup.bind(this));
     },
 
-    _setup: function () {
-        this.instance.schema = this.instance.definition.itemSchema();
-        this.title = this.options.title || "Create " + this.instance.definition.attributes.title;
+    setup: function (instance) {
+        this.instance = instance || this.options.instance || new this.model({});
+        this.instance.definition = this.instance.definition || this.definition;
+        this.instance.schema = this.instance.schema || this.definition.itemSchema();
+
+        this.instance.on('change', this.refresh.bind(this));
+        this.instance.on('sync', this.success.bind(this));
+        this.instance.on('error', this.error.bind(this));
+
+        this.creation = this.instance.attributes.id === undefined;
+
+        this.title = this.options.title ||
+                     (this.creation ? "Create " : "Edit ") + this.definition.attributes.title;
 
         // Underlying backbone-forms object
         this.form = new Backbone.Form({
             model: this.instance
         });
+
+        this.refresh();
     },
 
     render: function () {
         this.$el.html(this.template(this));
         this.$('.form').html(this.form.render().el);
         this.delegateEvents();
-        this.instance.on('change', this.refresh.bind(this));
-        this.instance.on('sync', this.success.bind(this));
-        this.instance.on('error', this.error.bind(this));
-        this.instance.trigger('change');
-
-        this.trigger('render');
         return this;
     },
 
@@ -283,7 +275,7 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     success: function (model, response, options) {
-        this.trigger('success', model);
+        this.trigger((this.creation ? 'created' : 'saved'), model);
         return false;
     },
 

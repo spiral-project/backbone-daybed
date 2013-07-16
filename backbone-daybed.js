@@ -341,4 +341,4 @@ Daybed.renderForm = function (selector, options) {
 };
 
 
-})(Backbone.noConflict(),  _.noConflict(), jQuery);
+})(Backbone,  _, jQuery);

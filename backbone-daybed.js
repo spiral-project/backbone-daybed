@@ -257,21 +257,30 @@ Daybed.FormView = Backbone.View.extend({
 
     cancel: function (e) {
         e.preventDefault();
-        this.$('form')[0].reset();
+        this.trigger('cancel');
+        this.reset();
         return false;
+    },
+
+    reset: function () {
+        this.$('form')[0].reset();
     },
 
     submit: function(e) {
         e.preventDefault();
-        // Hide previous validation errors (if any)
-        this.$('.field-error').remove();
         // Serialize form fields
         var data = this.form.getValue();
         this.trigger('submit', data);
+        this.save();
+        return false;
+    },
+
+    save: function () {
+        // Hide previous validation errors (if any)
+        this.$('.field-error').remove();
         // Store form data into instance, and save it
         this.form.commit();
         this.instance.save();
-        return false;
     },
 
     success: function (model, response, options) {
@@ -280,14 +289,16 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     error: function (model, response, options) {
+        var descriptions = [];
         try {
-            this.showErrors(JSON.parse(response.responseText));
+            descriptions = JSON.parse(response.responseText);
+            this.showErrors(descriptions);
         }
         catch (e) {
             this.$el.html(this.templateError({msg: response.responseText}));
         }
-
-        this.trigger('error', model);
+        this.trigger('error', {model: model,
+                               errors: descriptions});
         return false;
     },
 

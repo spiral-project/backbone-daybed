@@ -9,7 +9,7 @@ window.Daybed = window.Daybed || {};
  * Default settings
  */
 Daybed.SETTINGS = {
-    SERVER: "localhost:8000"
+    SERVER: "http://localhost:8000"
 };
 
 //
@@ -17,8 +17,9 @@ Daybed.SETTINGS = {
 //
 Daybed.Item = Backbone.Model.extend({
     url: function () {
-        return URI.build({hostname: Daybed.SETTINGS.SERVER,
-                          path: '/data/' + this.definition.id});
+        return Daybed.SETTINGS.SERVER +
+               '/data/' + this.definition.id +
+               '/' + this.id;
     },
 
     /**
@@ -40,8 +41,8 @@ Daybed.ItemList = Backbone.Collection.extend({
     },
 
     url: function () {
-        return URI.build({hostname: Daybed.SETTINGS.SERVER,
-                          path: '/data/' + this.definition.id});
+        return Daybed.SETTINGS.SERVER +
+               '/data/' + this.definition.id;
     },
 
     parse: function (response) {
@@ -118,8 +119,8 @@ Daybed.Definition = Backbone.Model.extend({
     },
 
     url: function () {
-        return URI.build({hostname: Daybed.SETTINGS.SERVER,
-                          path: 'definitions/' + this.id});
+        return Daybed.SETTINGS.SERVER +
+               '/definitions/' + this.id;
     },
 
     /**

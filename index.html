@@ -8,6 +8,7 @@
         <style>
             .field-error { color: red; }
         </style>
+
         <script type="text/template" id="tpl-table">
             <thead>
               {{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}
@@ -85,9 +86,10 @@
                     }
                 });
 
-
-                // Choose definition by its id
-                var definition = new Daybed.Definition({id: 'demo-quotes'}),
+                // Load definition by its id.
+                // Uses location #hash, with default for demo
+                var id = window.location.hash.slice(1) || 'demo-quotes';
+                    definition = new Daybed.Definition({id: id}),
                     itemList = new Daybed.ItemList(definition);
 
                 // Instantiate views

@@ -98,10 +98,13 @@
                     formView.render();
                 });
 
-                // On creation, add to the collection and
-                // empty the form.
+                // On creation, add to the collection.
                 formView.on('created', function (record) {
                     itemList.add(record);
+                });
+
+                // After edition, empty the form.
+                formView.on('saved created', function (record) {
                     formView.cancel();  // reset form
                 });
 

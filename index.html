@@ -51,6 +51,7 @@
                         this.model.destroy();
                     },
                     edit: function () {
+                        this.$el.addClass('info');
                         this.trigger('edit', this.model)
                     }
                 });
@@ -106,6 +107,11 @@
                 // After edition, empty the form.
                 formView.on('saved created', function (record) {
                     formView.cancel();  // reset form
+                });
+
+                // Once done with form, remove row highlight
+                formView.on('cancel saved created', function () {
+                    $('tr.info').removeClass('info');
                 });
 
                 // Wait for definition to be fetched from server

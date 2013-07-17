@@ -86,6 +86,9 @@
                     }
                 });
 
+                //
+                // Instantiate Models and Views
+                //
                 // Load definition by its id.
                 // Uses location #hash, with default for demo
                 var id = window.location.hash.slice(1) || 'demo-quotes';
@@ -96,6 +99,21 @@
                 var listView = new ListView({collection: itemList})
                     formView = new Daybed.FormView({definition: definition});
 
+                // Wait for definition to be fetched from server
+                // in order to populate form fields and list headers
+                definition.whenReady(function () {
+                    $('#records-list').html(listView.render().el);
+                    $('#form-holder').html(formView.render().el);
+                });
+
+                // Fetch definition !
+                definition.fetch();
+                // Fetch records !
+                itemList.fetch();
+
+                //
+                // Cable list and form events
+                //
                 // Rebuild the form with bound instance on edit.
                 listView.on('edit', function (record) {
                     formView.setup(record);
@@ -113,18 +131,6 @@
                     formView.render();
                     $('tr.info').removeClass('info');
                 });
-
-                // Wait for definition to be fetched from server
-                // in order to populate form fields and list headers
-                definition.whenReady(function () {
-                    $('#records-list').html(listView.render().el);
-                    $('#form-holder').html(formView.render().el);
-                });
-
-                // Fetch definition !
-                definition.fetch();
-                // Fetch records !
-                itemList.fetch();
 
             };
         </script>

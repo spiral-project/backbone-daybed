@@ -10,7 +10,6 @@ Dependencies
 * [Backbone](http://backbonejs.org)
 * [Backbone-Forms](https://github.com/powmedia/backbone-forms#readme)
 * [Mustache](http://mustache.github.io/)
-* [URI.js](http://medialize.github.io/URI.js/)
 
 
 (very) Basic Example
@@ -33,7 +32,7 @@ Initalize form in ``<div>`` container :
 
 ```javascript
 
-    Daybed.SETTINGS.SERVER = "localhost:8000";
+    Daybed.SETTINGS.SERVER = "http://localhost:8000";  // no trailing slash
 
     var form = Daybed.renderForm('#form-holder', {id: 'your-model-id'});
 

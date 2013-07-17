@@ -227,13 +227,21 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     setup: function (instance) {
+        // Stop watching previous bound instance if any.
+        if (this.instance) {
+            this.instance.off('change', this.success);
+            this.instance.off('sync', this.success);
+            this.instance.off('error', this.error);
+        }
+
+        // Bind new instance to this form
         this.instance = instance || this.options.instance || new this.model({});
         this.instance.definition = this.instance.definition || this.definition;
         this.instance.schema = this.instance.schema || this.definition.itemSchema();
 
-        this.instance.on('change', this.refresh.bind(this));
-        this.instance.on('sync', this.success.bind(this));
-        this.instance.on('error', this.error.bind(this));
+        this.instance.on('change', this.refresh, this);
+        this.instance.on('sync', this.success, this);
+        this.instance.on('error', this.error, this);
 
         this.creation = this.instance.attributes.id === undefined;
 

@@ -98,24 +98,15 @@
                     formView.render();
                 });
 
-                // On cancel, start again with a creation form
-                formView.on('cancel', function () {
-                    formView.setup(null);
-                    formView.render();
-                });
-
                 // On creation, add to the collection.
                 formView.on('created', function (record) {
                     itemList.add(record);
                 });
 
-                // After edition, empty the form.
-                formView.on('saved created', function () {
-                    formView.cancel();  // reset form
-                });
-
-                // Once done with form, remove row highlight
+                // After cancel or edition, empty the form.
                 formView.on('cancel saved created', function () {
+                    formView.setup(null);
+                    formView.render();
                     $('tr.info').removeClass('info');
                 });
 

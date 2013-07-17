@@ -92,10 +92,9 @@
                 var listView = new ListView({collection: itemList})
                     formView = new Daybed.FormView({definition: definition});
 
-                // Rebuild the form on edit and cancel.
-                // On cancel, it will rebuild an empty form.
-                listView.on('edit cancel', function (record) {
-                    formView.setup(record || null);
+                // Rebuild the form with bound instance on edit.
+                listView.on('edit', function (record) {
+                    formView.setup(record);
                     formView.render();
                 });
 
@@ -105,7 +104,7 @@
                 });
 
                 // After edition, empty the form.
-                formView.on('saved created', function (record) {
+                formView.on('saved created', function () {
                     formView.cancel();  // reset form
                 });
 

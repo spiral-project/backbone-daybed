@@ -98,6 +98,12 @@
                     formView.render();
                 });
 
+                // On cancel, start again with a creation form
+                formView.on('cancel', function () {
+                    formView.setup(null);
+                    formView.render();
+                });
+
                 // On creation, add to the collection.
                 formView.on('created', function (record) {
                     itemList.add(record);

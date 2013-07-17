@@ -16,10 +16,9 @@ Daybed.SETTINGS = {
 //  Item : a record
 //
 Daybed.Item = Backbone.Model.extend({
-    url: function () {
+    urlRoot: function () {
         return Daybed.SETTINGS.SERVER +
-               '/data/' + this.definition.id +
-               '/' + this.id;
+               '/data/' + this.definition.id;
     },
 
     /**

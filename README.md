@@ -1,12 +1,22 @@
 backbone-daybed
 ===============
 
-Generic wrappers around Backbone-Forms for Daybed models
+Generic wrappers around Backbone-Forms for [Daybed](http://github.com/spiral-project/daybed).
+
+Basically, it gives you :
+
+* Some Backbone models for Daybed concepts
+* A simple form *View* to create and edit Daybed model records
+* A helper to embed a Daybed form with one line of code
+
+Have a look at the [Demo](http://spiral-project.github.io/backbone-daybed/) !
 
 
 Dependencies
 ------------
 
+* [jQuery](http://jquery.com)
+* [Underscore](http://underscorejs.org)
 * [Backbone](http://backbonejs.org)
 * [Backbone-Forms](https://github.com/powmedia/backbone-forms#readme)
 * [Mustache](http://mustache.github.io/)
@@ -25,18 +35,20 @@ Load Javascript dependencies :
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.7.0/mustache.min.js"></script>
 
-   <div id="form-holder"></div>
+    <script type="text/javascript" src="backbone-daybed.js"></script>
+
+    <div id="form-holder"></div>
 ```
 
 Initalize form in ``<div>`` container :
 
 ```javascript
 
-    Daybed.SETTINGS.SERVER = "http://localhost:8000";  // no trailing slash
+    Daybed.SETTINGS.SERVER = "http://daybed.lolnet.org";  // no trailing slash
 
     var form = Daybed.renderForm('#form-holder', {id: 'your-model-id'});
 
-    form.on('success', function (record) {
+    form.on('created', function (record) {
         $("#form-holder").html(record.id + " was saved succesfully.");
     })
 

@@ -391,11 +391,15 @@ Daybed.TableRowView = Backbone.View.extend({
         return this;
     },
 
-    destroy: function (){
-        this.model.destroy();
+    destroy: function (e) {
+        e.preventDefault();
+        if (confirm("Are you sure ?") === true) {
+            this.model.destroy();
+        }
     },
 
-    edit: function () {
+    edit: function (e) {
+        e.preventDefault();
         this.trigger('edit', this.model, this);
     }
 });

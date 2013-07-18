@@ -8,20 +8,6 @@
         <style>
             .field-error { color: red; }
         </style>
-
-        <script type="text/template" id="tpl-table">
-            <thead>
-              {{#fields}}<th><span title="{{description}}">{{name}}</span></th>{{/fields}}
-              <th>Actions</th>
-            </thead>
-            <tbody></tbody>
-        </script>
-
-        <script type="text/template" id="tpl-row">
-            {{#fieldsValues}}<td>{{.}}</td>{{/fieldsValues}}
-            <td><a href="#" title="Edit" class="edit">Edit</a>&nbsp;
-                <a href="#" title="Delete" class="close">x</a></td>
-        </script>
     </head>
     <body class="row">
 
@@ -33,58 +19,6 @@
 
                 Daybed.SETTINGS.SERVER = "http://daybed.lolnet.org";
 
-                // A view for one line in the list.
-                // It reacts to record change and deletion.
-                var RecordView = Backbone.View.extend({
-                    tagName: 'tr',
-                    template: Mustache.compile($('#tpl-row').html()),
-                    events: {
-                        'click .edit': 'edit',
-                        'click .close': 'destroy'
-                    },
-                    initialize: function () {
-                        this.model.on('change', this.render, this);
-                        this.model.on('destroy', this.remove, this);
-                    },
-                    render: function (){
-                        this.$el.html(this.template(this.model));
-                        return this;
-                    },
-                    destroy: function (){
-                        this.model.destroy();
-                    },
-                    edit: function () {
-                        this.trigger('edit', this.model, this);
-                    }
-                });
-
-                // A view for the whole collection.
-                // It adds list headers and reacts to additions in collection.
-                var ListView = Backbone.View.extend({
-                    tagName: 'table',
-                    className: 'table',
-                    template: Mustache.compile($('#tpl-table').html()),
-                    initialize: function () {
-                        this.collection.on('add', this.addOne, this);
-                        this.collection.on('reset', this.addAll, this);
-                    },
-                    render: function () {
-                        this.$el.html(this.template(this.collection.definition.attributes));
-                        return this;
-                    },
-                    addOne: function (record) {
-                        var view = new RecordView({model: record});
-                        view.on('edit', this.edit, this);
-                        this.$('tbody').prepend(view.render().el);
-                    },
-                    addAll: function () {
-                        this.collection.each(this.addOne, this);
-                    },
-                    edit: function (record, row) {
-                        this.trigger('edit', record, row);
-                    }
-                });
-
                 //
                 // Instantiate Models and Views
                 //
@@ -95,7 +29,7 @@
                     itemList = new Daybed.ItemList(definition);
 
                 // Instantiate views
-                var listView = new ListView({collection: itemList})
+                var listView = new Daybed.TableView({collection: itemList})
                     formView = new Daybed.FormView({definition: definition});
 
                 // Wait for definition to be fetched from server

@@ -5,9 +5,9 @@ Backbone.$ = $;
 
 window.Daybed = window.Daybed || {};
 
-/**
- * Default settings
- */
+//
+// SETTINGS : global config.
+//
 Daybed.SETTINGS = {
     SERVER: "http://localhost:8000"
 };
@@ -31,7 +31,9 @@ Daybed.Item = Backbone.Model.extend({
     }
 });
 
-
+//
+// ItemList : Collection of Item
+//
 Daybed.ItemList = Backbone.Collection.extend({
     model: Daybed.Item,
 
@@ -210,10 +212,10 @@ Daybed.FormView = Backbone.View.extend({
     tagName: "div",
     className: "well",
 
-    template: Mustache.compile('<h2>{{ title }}</h2>' +
+    template: Mustache.compile('<h2>{{ l.title }}</h2>' +
                                '<div class="form"></div>' +
-                               '<a class="btn cancel" href="#">Cancel</a> ' +
-                               '<a class="btn submit btn-success" href="#">Save</a>'),
+                               '{{#l.cancel}}<a class="btn cancel" href="#">{{ l.cancel }}</a> {{/l.cancel}}' +
+                               '<a class="btn submit btn-success" href="#">{{ l.save }}</a>'),
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
 
     events: {
@@ -244,9 +246,7 @@ Daybed.FormView = Backbone.View.extend({
         this.instance.on('error', this.error, this);
 
         this.creation = this.instance.attributes.id === undefined;
-
-        this.title = this.options.title ||
-                     (this.creation ? "Create " : "Edit ") + this.definition.attributes.title.toLowerCase();
+        this.validateOnly = !!this.options.validateOnly;
 
         // Underlying backbone-forms object
         this.form = new Backbone.Form({
@@ -254,6 +254,13 @@ Daybed.FormView = Backbone.View.extend({
         });
 
         this.refresh();
+
+        // UI Labels...
+        this.l = {};
+        this.l.title = this.options.title ||
+                       (this.creation ? "Create " : "Edit ") + this.definition.attributes.title.toLowerCase();
+        this.l.cancel = 'cancel' in this.options ? this.options.cancel : "Cancel";
+        this.l.save = this.options.save || (this.creation ? "Create" : "Save");
     },
 
     render: function () {
@@ -288,11 +295,18 @@ Daybed.FormView = Backbone.View.extend({
         this.$('.field-error').remove();
         // Store form data into instance, and save it
         this.form.commit();
-        this.instance.save();
+        // Submit form (POST/PUT)
+        var headers = {};
+        // Header validate only tells Daybed not to store
+        if (this.validateOnly)
+            headers['X-Daybed-Validate-Only'] = 'true';
+        this.instance.save({}, {headers: headers});
     },
 
     success: function (model, response, options) {
-        this.trigger((this.creation ? 'created' : 'saved'), arguments);
+        this.trigger((this.creation ? 'created' :
+                      this.validateOnly ? 'validated' :
+                      'saved'), arguments);
         return false;
     },
 
@@ -340,13 +354,15 @@ Daybed.FormView = Backbone.View.extend({
  * Form rendering helper
  */
 Daybed.renderForm = function (selector, options) {
-    var definition = new Daybed.Definition(options),
-        formView = new Daybed.FormView({definition: definition});
-
+    options = options || {};
+    var definition = options.definition ||
+                     new Daybed.Definition(_.pick(options, 'id')),
+        formView = new Daybed.FormView(_.extend({definition: definition},
+                                                options));
+    // Render once ready
     definition.whenReady(function () {
         $(selector).html(formView.render().el);
     });
-
     definition.fetch();
     return formView;
 };
@@ -357,25 +373,35 @@ Daybed.renderForm = function (selector, options) {
 //
 Daybed.TableRowView = Backbone.View.extend({
     tagName: 'tr',
+
     template: Mustache.compile('{{#fieldsValues}}<td>{{.}}</td>{{/fieldsValues}}' +
                                '<td><a href="#" title="Edit" class="edit">Edit</a>&nbsp;' +
                                '    <a href="#" title="Delete" class="close">x</a></td>'),
+
     events: {
         'click .edit': 'edit',
         'click .close': 'destroy'
     },
+
     initialize: function () {
         this.model.on('change', this.render, this);
         this.model.on('destroy', this.remove, this);
     },
+
     render: function (){
         this.$el.html(this.template(this.model));
         return this;
     },
-    destroy: function (){
-        this.model.destroy();
+
+    destroy: function (e) {
+        e.preventDefault();
+        if (confirm("Are you sure ?") === true) {
+            this.model.destroy();
+        }
     },
-    edit: function () {
+
+    edit: function (e) {
+        e.preventDefault();
         this.trigger('edit', this.model, this);
     }
 });
@@ -387,27 +413,34 @@ Daybed.TableRowView = Backbone.View.extend({
 Daybed.TableView = Backbone.View.extend({
     tagName: 'table',
     className: 'table',
+    rowView: Daybed.TableRowView,
+
     template: Mustache.compile('<thead>' +
                                '{{#fields}}' +
                                '  <th><span title="{{description}}">{{name}}</span></th>' +
                                '{{/fields}}<th>Actions</th>' +
                                '</thead><tbody></tbody>'),
+
     initialize: function () {
         this.collection.on('add', this.addOne, this);
         this.collection.on('reset', this.addAll, this);
     },
+
     render: function () {
         this.$el.html(this.template(this.collection.definition.attributes));
         return this;
     },
+
     addOne: function (record) {
-        var view = new Daybed.TableRowView({model: record});
+        var view = new this.rowView({model: record});
         view.on('edit', this.edit, this);
         this.$('tbody').prepend(view.render().el);
     },
+
     addAll: function () {
         this.collection.each(this.addOne, this);
     },
+
     edit: function (record, row) {
         this.trigger('edit', record, row);
     }

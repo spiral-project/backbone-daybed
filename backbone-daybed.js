@@ -5,9 +5,9 @@ Backbone.$ = $;
 
 window.Daybed = window.Daybed || {};
 
-/**
- * Default settings
- */
+//
+// SETTINGS : global config.
+//
 Daybed.SETTINGS = {
     SERVER: "http://localhost:8000"
 };
@@ -31,7 +31,9 @@ Daybed.Item = Backbone.Model.extend({
     }
 });
 
-
+//
+// ItemList : Collection of Item
+//
 Daybed.ItemList = Backbone.Collection.extend({
     model: Daybed.Item,
 
@@ -350,6 +352,81 @@ Daybed.renderForm = function (selector, options) {
     definition.fetch();
     return formView;
 };
+
+
+//
+// TableRowView : a single row for TableView
+//
+Daybed.TableRowView = Backbone.View.extend({
+    tagName: 'tr',
+
+    template: Mustache.compile('{{#fieldsValues}}<td>{{.}}</td>{{/fieldsValues}}' +
+                               '<td><a href="#" title="Edit" class="edit">Edit</a>&nbsp;' +
+                               '    <a href="#" title="Delete" class="close">x</a></td>'),
+
+    events: {
+        'click .edit': 'edit',
+        'click .close': 'destroy'
+    },
+
+    initialize: function () {
+        this.model.on('change', this.render, this);
+        this.model.on('destroy', this.remove, this);
+    },
+
+    render: function (){
+        this.$el.html(this.template(this.model));
+        return this;
+    },
+
+    destroy: function (){
+        this.model.destroy();
+    },
+
+    edit: function () {
+        this.trigger('edit', this.model, this);
+    }
+});
+
+
+//
+// TableView : a generic list view for ItemList collections.
+//
+Daybed.TableView = Backbone.View.extend({
+    tagName: 'table',
+    className: 'table',
+    rowView: Daybed.TableRowView,
+
+    template: Mustache.compile('<thead>' +
+                               '{{#fields}}' +
+                               '  <th><span title="{{description}}">{{name}}</span></th>' +
+                               '{{/fields}}<th>Actions</th>' +
+                               '</thead><tbody></tbody>'),
+
+    initialize: function () {
+        this.collection.on('add', this.addOne, this);
+        this.collection.on('reset', this.addAll, this);
+    },
+
+    render: function () {
+        this.$el.html(this.template(this.collection.definition.attributes));
+        return this;
+    },
+
+    addOne: function (record) {
+        var view = new this.rowView({model: record});
+        view.on('edit', this.edit, this);
+        this.$('tbody').prepend(view.render().el);
+    },
+
+    addAll: function () {
+        this.collection.each(this.addOne, this);
+    },
+
+    edit: function (record, row) {
+        this.trigger('edit', record, row);
+    }
+});
 
 
 })(Backbone,  _, jQuery);

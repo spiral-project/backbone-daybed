@@ -306,7 +306,7 @@ Daybed.FormView = Backbone.View.extend({
     success: function (model, response, options) {
         this.trigger((this.creation ? 'created' :
                       this.validateOnly ? 'validated' :
-                      'saved'), arguments);
+                      'saved'), model, response, options);
         return false;
     },
 

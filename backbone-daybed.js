@@ -212,10 +212,10 @@ Daybed.FormView = Backbone.View.extend({
     tagName: "div",
     className: "well",
 
-    template: Mustache.compile('<h2>{{ title }}</h2>' +
+    template: Mustache.compile('<h2>{{ l.title }}</h2>' +
                                '<div class="form"></div>' +
-                               '<a class="btn cancel" href="#">Cancel</a> ' +
-                               '<a class="btn submit btn-success" href="#">Save</a>'),
+                               '{{#l.cancel}}<a class="btn cancel" href="#">{{ l.cancel }}</a> {{/l.cancel}}' +
+                               '<a class="btn submit btn-success" href="#">{{ l.save }}</a>'),
     templateError: Mustache.compile('<span class="field-error">{{ msg }}</span>'),
 
     events: {
@@ -247,15 +247,19 @@ Daybed.FormView = Backbone.View.extend({
 
         this.creation = this.instance.attributes.id === undefined;
 
-        this.title = this.options.title ||
-                     (this.creation ? "Create " : "Edit ") + this.definition.attributes.title.toLowerCase();
-
         // Underlying backbone-forms object
         this.form = new Backbone.Form({
             model: this.instance
         });
 
         this.refresh();
+
+        // UI Labels...
+        this.l = {};
+        this.l.title = this.options.title ||
+                       (this.creation ? "Create " : "Edit ") + this.definition.attributes.title.toLowerCase();
+        this.l.cancel = 'cancel' in this.options ? this.options.cancel : "Cancel";
+        this.l.save = this.options.save || (this.creation ? "Create" : "Save");
     },
 
     render: function () {

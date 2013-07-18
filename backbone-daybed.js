@@ -354,13 +354,15 @@ Daybed.FormView = Backbone.View.extend({
  * Form rendering helper
  */
 Daybed.renderForm = function (selector, options) {
-    var definition = new Daybed.Definition(options),
-        formView = new Daybed.FormView({definition: definition});
-
+    options = options || {};
+    var definition = options.definition ||
+                     new Daybed.Definition(_.pick(options, 'id')),
+        formView = new Daybed.FormView(_.extend({definition: definition},
+                                                options));
+    // Render once ready
     definition.whenReady(function () {
         $(selector).html(formView.render().el);
     });
-
     definition.fetch();
     return formView;
 };

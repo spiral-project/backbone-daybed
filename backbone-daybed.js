@@ -292,7 +292,7 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     success: function (model, response, options) {
-        this.trigger((this.creation ? 'created' : 'saved'), model);
+        this.trigger((this.creation ? 'created' : 'saved'), arguments);
         return false;
     },
 

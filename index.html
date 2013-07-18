@@ -54,8 +54,7 @@
                         this.model.destroy();
                     },
                     edit: function () {
-                        this.$el.addClass('info');
-                        this.trigger('edit', this.model)
+                        this.trigger('edit', this.model, this);
                     }
                 });
 
@@ -81,8 +80,8 @@
                     addAll: function () {
                         this.collection.each(this.addOne, this);
                     },
-                    edit: function (record) {
-                        this.trigger('edit', record);
+                    edit: function (record, row) {
+                        this.trigger('edit', record, row);
                     }
                 });
 
@@ -115,7 +114,9 @@
                 // Cable list and form events
                 //
                 // Rebuild the form with bound instance on edit.
-                listView.on('edit', function (record) {
+                listView.on('edit', function (record, row) {
+                    $('tr.info').removeClass('info');
+                    row.$el.addClass('info');
                     formView.setup(record);
                     formView.render();
                 });

@@ -164,6 +164,7 @@ Daybed.Definition = Backbone.Model.extend({
         var typeMapping = {
             'int': 'Number',
             'string': 'Text',
+            'text': 'TextArea',
             'boolean': 'Checkbox'
         };
         var fieldMapping = {
@@ -173,8 +174,11 @@ Daybed.Definition = Backbone.Model.extend({
                 if (t) d.type = t;
                 return d;
             },
-            'text': function () {
-                return { type: 'TextArea' };
+            'enum': function (f) {
+                var d = fieldMapping['default'](f);
+                d.options = f.choices;
+                d.type = f.choices.length > 3 ? 'Select' : 'Radio';
+                return d;
             },
             'decimal': function (f) {
                 var d = fieldMapping['default'](f);

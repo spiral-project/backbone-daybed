@@ -109,13 +109,13 @@ Daybed.Definition = Backbone.Model.extend({
 
     save: function () {
         // Substitute meta types by daybed types
-        $(this.attributes.fields).each((function (i, field) {
+        _.each(this.attributes.fields, function (field) {
             var meta = this.metaTypes[field.type];
             if (meta) {
                 field.meta = field.type;
                 field.type = meta;
             }
-        }).bind(this));
+        }, this);
         Backbone.Model.prototype.save.apply(this, arguments);
     },
 
@@ -198,11 +198,11 @@ Daybed.Definition = Backbone.Model.extend({
         };
         var schema = {};
         // Backbone.Forms fields from this Daybed definition
-        $(this.attributes.fields).each(function (i, field) {
+        _.each(this.attributes.fields, function (field) {
             var build = fieldMapping[field.meta || field.type];
             schema[field.name] = (build ?
                                   build(field) : fieldMapping['default'](field));
-        });
+        }, this);
         return schema;
     }
 });
@@ -332,11 +332,11 @@ Daybed.FormView = Backbone.View.extend({
      * Show each error along its field
      */
     showErrors: function (descriptions) {
-        $(descriptions.errors).each((function (i, e) {
+        _.each(descriptions.errors, function (e) {
             var name = e.name.split('.')[0];
             this.$("[name='" + name + "']")
                 .after(this.templateError({msg: e.description}));
-        }).bind(this));
+        }, this);
     },
 
     /**

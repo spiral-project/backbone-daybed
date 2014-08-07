@@ -1,12 +1,13 @@
 {
-    "name": "backbone-daybed"
-  , "version": "0.1.0"
-  , "description": "Generic wrappers around Backbone-Forms for Daybed models"
-  , "keywords": ["Daybed", "Forms"]
-  , "main": "backbone-daybed.js"
-  , "dependencies": {
+  "name": "backbone-daybed",
+  "version": "0.1.0",
+  "description": "Generic wrappers around Backbone-Forms for Daybed models",
+  "keywords": ["Daybed", "Forms"],
+  "main": "backbone-daybed.js",
+  "dependencies": {
     "backbone": "1.0.0",
     "backbone-forms": "0.12.0",
+    "daybed.js": "0.1.0",
     "mustache": "0.7.2",
     "URIjs": "1.10.2"
   }

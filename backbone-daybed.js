@@ -12,13 +12,46 @@ Daybed.SETTINGS = {
     SERVER: "http://localhost:8000"
 };
 
+
+Daybed.BackboneModel = Backbone.Model.extend({
+  sync: function(method, model, options) {
+    var methodMap = {
+      'create': 'POST',
+      'update': 'PUT',
+      'patch': 'PATCH',
+      'delete': 'DELETE',
+      'read': 'GET'
+    };
+
+    var url = options.url || model.url;
+
+    if (typeof(url) === "function") {
+      url = url();
+    }
+
+    options.beforeSend = function(xhr) {
+      if (url && Daybed.SETTINGS.credentials &&
+          Daybed.SETTINGS.credentials.id &&
+          Daybed.SETTINGS.credentials.key &&
+          Daybed.SETTINGS.credentials.algorithm) {
+
+        var hawkHeader = hawk.client.header(methodMap[method], url, {
+          credentials: options.credentials
+        });
+        xhr.setRequestHeader('Authorization', hawkHeader.field);
+      }
+    };
+    Backbone.sync.apply(this, method, model, options);
+  }
+});
+
 //
 //  Item : a record
 //
-Daybed.Item = Backbone.Model.extend({
+Daybed.Item = Daybed.BackboneModel.extend({
     urlRoot: function () {
         return Daybed.SETTINGS.SERVER +
-               '/data/' + this.definition.id;
+               '/models/' + this.definition.id + '/records';
     },
 
     /**
@@ -43,7 +76,7 @@ Daybed.ItemList = Backbone.Collection.extend({
 
     url: function () {
         return Daybed.SETTINGS.SERVER +
-               '/data/' + this.definition.id;
+               '/models/' + this.definition.id + '/records';
     },
 
     parse: function (response) {
@@ -74,7 +107,7 @@ Daybed.ItemList = Backbone.Collection.extend({
 //
 //  Definition : a model
 //
-Daybed.Definition = Backbone.Model.extend({
+Daybed.Definition = Daybed.BackboneModel.extend({
     /**
      * Backbone.forms schema for Definition forms
      */
@@ -116,12 +149,12 @@ Daybed.Definition = Backbone.Model.extend({
                 field.type = meta;
             }
         }, this);
-        Backbone.Model.prototype.save.apply(this, arguments);
+        Daybed.BackboneModel.prototype.save.apply(this, arguments);
     },
 
     url: function () {
         return Daybed.SETTINGS.SERVER +
-               '/definitions/' + this.id;
+               '/models/' + this.id;
     },
 
     /**

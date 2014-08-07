@@ -36,6 +36,9 @@ Load Javascript dependencies :
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.7.0/mustache.min.js"></script>
 
+    <script type="text/javascript" src="libs/daybed.js"></script>
+    <script type="text/javascript" src="libs/hawk.js"></script>
+
     <script type="text/javascript" src="backbone-daybed.js"></script>
 
     <div id="form-holder"></div>
@@ -46,6 +49,11 @@ Initalize form in ``<div>`` container :
 ```javascript
 
     Daybed.SETTINGS.SERVER = "http://daybed.lolnet.org";  // no trailing slash
+    Daybed.SETTINGS.credentials = {  // Existing token 
+        id: "tokenId",               // (optional if not set
+        key: "tokenKey",             // it will create a new one)
+        algorithm: "sha256"
+    };
 
     var form = Daybed.renderForm('#form-holder', {id: 'your-model-id'});
 
@@ -65,12 +73,24 @@ API
 Daybed model definition.
 
 ```js
-var definition = new Daybed.Definition({id: 'gnah'});
 
-definition.fetch();
+Daybed.getOrCreateToken(Daybed.SETTINGS.SERVER, {
+    id: sessionStorage.DaybedMapTokenId,
+    key: sessionStorage.DaybedMapTokenKey,
+    algorithm: "sha256"
+}).then(function(credentials) {
+    sessionStorage.geDaybedMapTokenId = credentials.id;
+    sessionStorage.DaybedMapTokenKey = credentials.key;
 
-definition.whenReady(function () {
-    console.log(JSON.stringify(definition.attributes));
+    var session = new Daybed.Session(Daybed.SETTINGS.SERVER, credentials);
+
+    var definition = new Daybed.Definition({session:session, id: 'gnah'});
+
+    definition.fetch();
+
+    definition.whenReady(function () {
+        console.log(JSON.stringify(definition.attributes));
+    });
 });
 ```
 

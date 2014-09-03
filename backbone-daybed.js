@@ -12,8 +12,14 @@ Daybed.SETTINGS = {
     SERVER: "http://localhost:8000"
 };
 
+//
+//  Base model for Hawk authentication
+//
 Daybed.BackboneModel = Backbone.Model.extend({
+
   sync: function(method, model, options) {
+    var url = options.url || _.result(model, 'url');
+
     var methodMap = {
       'create': 'POST',
       'update': 'PUT',
@@ -22,25 +28,27 @@ Daybed.BackboneModel = Backbone.Model.extend({
       'read': 'GET'
     };
 
-    var url = options.url || model.url;
+    options.beforeSend = this._addHawkHeaders(url, methodMap[method]);
 
-    if (typeof(url) === "function") {
-      url = url();
-    }
+    return Backbone.sync.call(this, method, model, options);
+  },
 
-    options.beforeSend = function(xhr) {
-      if (url && Daybed.SETTINGS.credentials &&
-          Daybed.SETTINGS.credentials.id &&
-          Daybed.SETTINGS.credentials.key &&
-          Daybed.SETTINGS.credentials.algorithm) {
+  _addHawkHeaders: function (method, url) {
+    return function(xhr) {
+        if (!url)
+            return;
 
-        var hawkHeader = hawk.client.header(methodMap[method], url, {
-          credentials: options.credentials
+        if (Daybed.SETTINGS.credentials &&
+            Daybed.SETTINGS.credentials.id &&
+            Daybed.SETTINGS.credentials.key &&
+            Daybed.SETTINGS.credentials.algorithm) {
+
+        var hawkHeader = hawk.client.header(method, url, {
+            credentials: Daybed.SETTINGS.credentials
         });
         xhr.setRequestHeader('Authorization', hawkHeader.field);
       }
     };
-    Backbone.sync.apply(this, method, model, options);
   }
 });
 

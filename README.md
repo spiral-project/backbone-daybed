@@ -35,17 +35,41 @@ Load Javascript dependencies :
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/backbone-forms/0.12.0/backbone-forms.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.7.0/mustache.min.js"></script>
+    <script type="text/javascript" src="//cdn.rawgit.com/hueniverse/hawk/v2.2.3/lib/browser.js"></script>
 
     <script type="text/javascript" src="backbone-daybed.js"></script>
 
     <div id="form-holder"></div>
 ```
 
+Setup *Daybed* server connection :
+
+In this example, we use the location hash to read Hawk *id* and *key*. If not
+set, connection will be anonymous.
+
+```javascript
+
+    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org/v1";  // no trailing slash
+
+    var credentials = window.location.hash.slice(1).split(':');
+    Daybed.SETTINGS.credentials = {
+        id: credentials[0],
+        key: credentials[1],
+        algorithm: "sha256"
+    };
+
+```
+
 Initalize form in ``<div>`` container :
 
 ```javascript
 
-    Daybed.SETTINGS.SERVER = "http://daybed.lolnet.org";  // no trailing slash
+    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org/v1";  // no trailing slash
+    Daybed.SETTINGS.credentials = {  // Existing token
+        id: "tokenId",               // (optional if not set
+        key: "tokenKey",             // it will connect anonymously)
+        algorithm: "sha256"
+    };
 
     var form = Daybed.renderForm('#form-holder', {id: 'your-model-id'});
 
@@ -59,21 +83,6 @@ Initalize form in ``<div>`` container :
 API
 ---
 
-
-###Daybed.Definition
-
-Daybed model definition.
-
-```js
-var definition = new Daybed.Definition({id: 'gnah'});
-
-definition.fetch();
-
-definition.whenReady(function () {
-    console.log(JSON.stringify(definition.attributes));
-});
-```
-
 ####Methods
 
 - **`whenReady(function)`**
@@ -84,19 +93,19 @@ definition.whenReady(function () {
 
   Returns list of fields names (`Array<String>`).
 
-- **`itemSchema()`**
+- **`recordSchema()`**
 
   Returns the *Backbone-Forms* schema for editing and saving records for this
   model.
 
 
-###Daybed.ItemList
+###Daybed.RecordList
 
-Retrieve data item of Daybed model
+Retrieve all records of a Daybed model
 
 ```js
 var definition = new Daybed.Definition({id: 'gnah'}),
-    collection = new Daybed.ItemList(definition);
+    collection = new Daybed.RecordList(definition);
 
 definition.fetch();
 collection.fetch();  // (will wait if necessary)
@@ -110,7 +119,7 @@ Uses Definition fields names for table headers.
 
 ```js
 
-var collection = new Daybed.ItemList(definition),
+var collection = new Daybed.RecordList(definition),
     tableView = new Daybed.TableView(collection);
 
 definition.whenReady(function () {
@@ -135,18 +144,3 @@ formView.on('created saved', function () {
     window.alert('Done !');
 });
 ```
-
-####Options
-
-TODO
-
-####Methods
-
-TODO
-
-
-TODO
-----
-
-* Build bundle with dependencies (using [grunt.js](http://gruntjs.com/), [anvil.js](http://anviljs.com/))
-* File fields

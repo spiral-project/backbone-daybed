@@ -13,12 +13,53 @@ Daybed.SETTINGS = {
 };
 
 //
-//  Item : a record
+//  Base model for Hawk authentication
 //
-Daybed.Item = Backbone.Model.extend({
+Daybed.BackboneModel = Backbone.Model.extend({
+
+  sync: function(method, model, options) {
+    var url = options.url || _.result(model, 'url');
+
+    var methodMap = {
+      'create': 'POST',
+      'update': 'PUT',
+      'patch': 'PATCH',
+      'delete': 'DELETE',
+      'read': 'GET'
+    };
+
+    options.beforeSend = this._addHawkHeaders(url, methodMap[method]);
+
+    return Backbone.sync.call(this, method, model, options);
+  },
+
+  _addHawkHeaders: function (method, url) {
+    return function(xhr) {
+        if (!url)
+            return;
+
+        if (Daybed.SETTINGS.credentials &&
+            Daybed.SETTINGS.credentials.id &&
+            Daybed.SETTINGS.credentials.key &&
+            Daybed.SETTINGS.credentials.algorithm) {
+
+        var hawkHeader = hawk.client.header(method, url, {
+            credentials: Daybed.SETTINGS.credentials
+        });
+        xhr.setRequestHeader('Authorization', hawkHeader.field);
+      }
+    };
+  }
+});
+
+
+//
+//  A record
+//
+Daybed.Record = Daybed.BackboneModel.extend({
     urlRoot: function () {
         return Daybed.SETTINGS.SERVER +
-               '/data/' + this.definition.id;
+               '/models/' + this.definition.id + '/records';
     },
 
     /**
@@ -32,10 +73,10 @@ Daybed.Item = Backbone.Model.extend({
 });
 
 //
-// ItemList : Collection of Item
+// Collection of records
 //
-Daybed.ItemList = Backbone.Collection.extend({
-    model: Daybed.Item,
+Daybed.RecordList = Backbone.Collection.extend({
+    model: Daybed.Record,
 
     initialize: function (definition) {
         this.definition = definition;
@@ -43,7 +84,7 @@ Daybed.ItemList = Backbone.Collection.extend({
 
     url: function () {
         return Daybed.SETTINGS.SERVER +
-               '/data/' + this.definition.id;
+               '/models/' + this.definition.id + '/records';
     },
 
     parse: function (response) {
@@ -74,7 +115,7 @@ Daybed.ItemList = Backbone.Collection.extend({
 //
 //  Definition : a model
 //
-Daybed.Definition = Backbone.Model.extend({
+Daybed.Definition = Daybed.BackboneModel.extend({
     /**
      * Backbone.forms schema for Definition forms
      */
@@ -116,12 +157,12 @@ Daybed.Definition = Backbone.Model.extend({
                 field.type = meta;
             }
         }, this);
-        Backbone.Model.prototype.save.apply(this, arguments);
+        Daybed.BackboneModel.prototype.save.apply(this, arguments);
     },
 
     url: function () {
         return Daybed.SETTINGS.SERVER +
-               '/definitions/' + this.id;
+               '/models/' + this.id + '/definition';
     },
 
     /**
@@ -153,12 +194,12 @@ Daybed.Definition = Backbone.Model.extend({
     },
 
     /**
-     * Builds a Backbone.forms schema from the *Definition* record, 
-     * for {Item} forms.
+     * Builds a Backbone.forms schema from the *Definition* record,
+     * for {Record} forms.
      * For each model field, add a Backbone.forms declaration.
      * @returns {Object}
      */
-    itemSchema: function () {
+    recordSchema: function () {
         if (!this.isReady())
             throw "Definition is not ready. Fetch it first.";
         var typeMapping = {
@@ -212,7 +253,7 @@ Daybed.Definition = Backbone.Model.extend({
 // FormView : Generic Backbone form
 //
 Daybed.FormView = Backbone.View.extend({
-    model: Daybed.Item,
+    model: Daybed.Record,
     tagName: "div",
     className: "well",
 
@@ -243,7 +284,7 @@ Daybed.FormView = Backbone.View.extend({
         // Bind new instance to this form
         this.instance = instance || this.options.instance || new this.model({});
         this.instance.definition = this.instance.definition || this.definition;
-        this.instance.schema = this.instance.schema || this.definition.itemSchema();
+        this.instance.schema = this.instance.schema || this.definition.recordSchema();
 
         this.instance.on('change', this.refresh, this);
         this.instance.on('sync', this.success, this);
@@ -412,7 +453,7 @@ Daybed.TableRowView = Backbone.View.extend({
 
 
 //
-// TableView : a generic list view for ItemList collections.
+// TableView : a generic list view for RecordList collections.
 //
 Daybed.TableView = Backbone.View.extend({
     tagName: 'table',

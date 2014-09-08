@@ -248,9 +248,8 @@ Daybed.Definition = Daybed.BackboneModel.extend({
     }
 });
 
-
 //
-// FormView : Generic Backbone form
+// Base form class
 //
 Daybed.FormView = Backbone.View.extend({
     model: Daybed.Record,
@@ -269,8 +268,15 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     initialize: function () {
-        this.definition = this.options.definition || this.options.instance.definition;
-        this.definition.whenReady(this.setup.bind(this));
+        this.modelname = this.options.modelname;
+        this.setup();
+    },
+
+    buildForm: function () {
+        // Underlying backbone-forms object
+        return new Backbone.Form({
+            model: this.instance
+        });
     },
 
     setup: function (instance) {
@@ -283,8 +289,6 @@ Daybed.FormView = Backbone.View.extend({
 
         // Bind new instance to this form
         this.instance = instance || this.options.instance || new this.model({});
-        this.instance.definition = this.instance.definition || this.definition;
-        this.instance.schema = this.instance.schema || this.definition.recordSchema();
 
         this.instance.on('change', this.refresh, this);
         this.instance.on('sync', this.success, this);
@@ -293,17 +297,13 @@ Daybed.FormView = Backbone.View.extend({
         this.creation = this.instance.attributes.id === undefined;
         this.validateOnly = !!this.options.validateOnly;
 
-        // Underlying backbone-forms object
-        this.form = new Backbone.Form({
-            model: this.instance
-        });
+        this.form = this.buildForm();
 
         this.refresh();
 
         // UI Labels...
         this.l = {};
-        this.l.title = this.options.title ||
-                       (this.creation ? "Create " : "Edit ") + this.definition.attributes.title.toLowerCase();
+        this.l.title = this.options.title || (this.creation ? "Create " : "Edit " + this.modelname);
         this.l.cancel = 'cancel' in this.options ? this.options.cancel : "Cancel";
         this.l.save = this.options.save || (this.creation ? "Create" : "Save");
     },
@@ -395,6 +395,41 @@ Daybed.FormView = Backbone.View.extend({
 });
 
 
+//
+// FormView : Generic Backbone form
+//
+Daybed.RecordFormView = Daybed.FormView.extend({
+
+    initialize: function () {
+        this.definition = this.options.definition ? this.options.definition
+                                                  : this.options.instance ? this.options.instance.definition
+                                                                          : null;
+        Daybed.FormView.prototype.initialize.call(this);
+    },
+
+    buildForm: function () {
+        this.instance.definition = this.instance.definition || this.definition;
+        this.instance.schema = this.instance.schema || this.definition.recordSchema();
+        return Daybed.FormView.prototype.buildForm.call(this);
+    },
+
+    setup: function (instance) {
+        this.definition.whenReady(function () {
+            if (this.modelname === undefined) {
+                this.modelname = this.definition.attributes.title.toLowerCase();
+            }
+            Daybed.FormView.prototype.setup.call(this, instance);
+        }.bind(this));
+    },
+
+    render: function () {
+        this.definition.whenReady(function () {
+            Daybed.FormView.prototype.render.call(this);
+        }.bind(this));
+    }
+});
+
+
 /**
  * Form rendering helper
  */
@@ -402,8 +437,8 @@ Daybed.renderForm = function (selector, options) {
     options = options || {};
     var definition = options.definition ||
                      new Daybed.Definition(_.pick(options, 'id')),
-        formView = new Daybed.FormView(_.extend({definition: definition},
-                                                options));
+        formView = new Daybed.RecordFormView(_.extend({definition: definition},
+                                                      options));
     // Render once ready
     definition.whenReady(function () {
         $(selector).html(formView.render().el);

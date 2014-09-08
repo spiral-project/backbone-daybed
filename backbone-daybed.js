@@ -301,7 +301,6 @@ Daybed.FormView = Backbone.View.extend({
         this.instance.on('error', this.error, this);
 
         this.creation = this.instance.attributes.id === undefined;
-        this.validateOnly = !!this.options.validateOnly;
 
         this.form = this.buildForm();
 
@@ -346,18 +345,12 @@ Daybed.FormView = Backbone.View.extend({
         this.$('.field-error').remove();
         // Store form data into instance, and save it
         this.form.commit();
-        // Submit form (POST/PUT)
-        var headers = {};
-        // Header validate only tells Daybed not to store
-        if (this.validateOnly)
-            headers['X-Daybed-Validate-Only'] = 'true';
-        this.instance.save({}, {headers: headers});
+        this.instance.save();
     },
 
     success: function (model, response, options) {
-        this.trigger((this.creation ? 'created' :
-                      this.validateOnly ? 'validated' :
-                      'saved'), model, response, options);
+        this.trigger(this.creation ? 'created' : 'saved',
+                     model, response, options);
         return false;
     },
 

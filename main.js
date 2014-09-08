@@ -24,7 +24,7 @@ function init() {
 
     // Instantiate views
     var listView = new Daybed.TableView({collection: recordList});
-    var formView = new Daybed.FormView({definition: definition});
+    var formView = new Daybed.RecordFormView({definition: definition});
 
     // Wait for definition to be fetched from server
     // in order to populate form fields and list headers

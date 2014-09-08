@@ -478,6 +478,7 @@ Daybed.TableRowView = Backbone.View.extend({
         e.preventDefault();
         if (confirm("Are you sure ?") === true) {
             this.model.destroy();
+            this.trigger('delete', this.model, this);
         }
     },
 
@@ -515,15 +516,24 @@ Daybed.TableView = Backbone.View.extend({
     addOne: function (record) {
         var view = new this.rowView({model: record});
         view.on('edit', this.edit, this);
+        view.on('delete', this.delete, this)
         this.$('tbody').prepend(view.render().el);
     },
 
     addAll: function () {
+        // Re-iterate collection on collection reset
         this.collection.each(this.addOne, this);
     },
 
+    //
+    // Transmit rows events
+    //
     edit: function (record, row) {
         this.trigger('edit', record, row);
+    },
+
+    delete: function (record, row) {
+        this.trigger('delete', record, row);
     }
 });
 

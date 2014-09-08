@@ -18,6 +18,12 @@ Daybed.SETTINGS = {
 Daybed.BackboneModel = Backbone.Model.extend({
 
   sync: function(method, model, options) {
+    $.ajaxSetup({
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+
     var url = options.url || _.result(model, 'url');
 
     var methodMap = {
@@ -33,7 +39,7 @@ Daybed.BackboneModel = Backbone.Model.extend({
     return Backbone.sync.call(this, method, model, options);
   },
 
-  _addHawkHeaders: function (method, url) {
+  _addHawkHeaders: function (url, method) {
     return function(xhr) {
         if (!url)
             return;
@@ -88,7 +94,7 @@ Daybed.RecordList = Backbone.Collection.extend({
     },
 
     parse: function (response) {
-        return response.data;
+        return response.records ;
     },
 
     /**
@@ -426,6 +432,7 @@ Daybed.RecordFormView = Daybed.FormView.extend({
         this.definition.whenReady(function () {
             Daybed.FormView.prototype.render.call(this);
         }.bind(this));
+        return this;
     }
 });
 

@@ -18,6 +18,12 @@ Daybed.SETTINGS = {
 Daybed.BackboneModel = Backbone.Model.extend({
 
   sync: function(method, model, options) {
+    $.ajaxSetup({
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+
     var url = options.url || _.result(model, 'url');
 
     var methodMap = {
@@ -88,7 +94,7 @@ Daybed.RecordList = Backbone.Collection.extend({
     },
 
     parse: function (response) {
-        return response.records;
+        return response.records ;
     },
 
     /**

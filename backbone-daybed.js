@@ -516,8 +516,10 @@ Daybed.TableView = Backbone.View.extend({
     addOne: function (record) {
         var view = new this.rowView({model: record});
         view.on('edit', this.edit, this);
-        view.on('delete', this.delete, this)
-        this.$('tbody').prepend(view.render().el);
+        view.on('delete', this.delete, this);
+        var row = view.render().el;
+        this.$('tbody').prepend(row);
+        return row;
     },
 
     addAll: function () {

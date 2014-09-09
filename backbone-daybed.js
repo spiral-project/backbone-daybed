@@ -274,6 +274,7 @@ Daybed.FormView = Backbone.View.extend({
     },
 
     initialize: function () {
+        this.instance = this.options.instance;
         this.modelname = this.options.modelname;
         this.setup();
     },
@@ -294,14 +295,13 @@ Daybed.FormView = Backbone.View.extend({
         }
 
         // Bind new instance to this form
-        this.instance = instance || this.options.instance || new this.model({});
+        this.instance = instance || this.instance || new this.model({});
 
         this.instance.on('change', this.refresh, this);
         this.instance.on('sync', this.success, this);
         this.instance.on('error', this.error, this);
 
         this.creation = this.instance.attributes.id === undefined;
-        this.validateOnly = !!this.options.validateOnly;
 
         this.form = this.buildForm();
 
@@ -346,18 +346,12 @@ Daybed.FormView = Backbone.View.extend({
         this.$('.field-error').remove();
         // Store form data into instance, and save it
         this.form.commit();
-        // Submit form (POST/PUT)
-        var headers = {};
-        // Header validate only tells Daybed not to store
-        if (this.validateOnly)
-            headers['X-Daybed-Validate-Only'] = 'true';
-        this.instance.save({}, {headers: headers});
+        this.instance.save();
     },
 
     success: function (model, response, options) {
-        this.trigger((this.creation ? 'created' :
-                      this.validateOnly ? 'validated' :
-                      'saved'), model, response, options);
+        this.trigger(this.creation ? 'created' : 'saved',
+                     model, response, options);
         return false;
     },
 
@@ -484,6 +478,7 @@ Daybed.TableRowView = Backbone.View.extend({
         e.preventDefault();
         if (confirm("Are you sure ?") === true) {
             this.model.destroy();
+            this.trigger('delete', this.model, this);
         }
     },
 
@@ -521,15 +516,24 @@ Daybed.TableView = Backbone.View.extend({
     addOne: function (record) {
         var view = new this.rowView({model: record});
         view.on('edit', this.edit, this);
+        view.on('delete', this.delete, this)
         this.$('tbody').prepend(view.render().el);
     },
 
     addAll: function () {
+        // Re-iterate collection on collection reset
         this.collection.each(this.addOne, this);
     },
 
+    //
+    // Transmit rows events
+    //
     edit: function (record, row) {
         this.trigger('edit', record, row);
+    },
+
+    delete: function (record, row) {
+        this.trigger('delete', record, row);
     }
 });
 

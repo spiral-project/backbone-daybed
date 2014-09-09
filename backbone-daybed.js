@@ -130,11 +130,30 @@ Daybed.Definition = Daybed.BackboneModel.extend({
         title: 'Text',
         description: 'Text',
         fields: { type: 'List', itemType: 'Object', subSchema: {
-            name: { validators: ['required'] },
-            description: 'Text',
-            required: { type: 'Checkbox', editorAttrs: { 'checked' : 'checked' } },
-            type: { type: 'Select', options: ['int', 'string', 'decimal', 'boolean',
-                                              'email', 'url', 'point', 'line', 'polygon'] }
+            type: {
+                title: 'Field type',
+                type: 'Select',
+                options: ['string', 'int', 'decimal', 'boolean',
+                          'email', 'url', 'point', 'line', 'polygon']
+            },
+            label: {
+                type: 'Text',
+                validators: ['required'],
+                editorAttrs: { 'placeHolder' : 'Form label' }
+            },
+            hint: {
+                type: 'Text',
+                validators: ['required'],
+                editorAttrs: { 'placeHolder' : 'Some help for users' }
+            },
+            name: {
+                validators: ['required'],
+                editorAttrs: { 'placeHolder' : 'Model attribute' }
+            },
+            required: {
+                type: 'Checkbox',
+                editorAttrs: { 'checked' : 'checked' }
+            },
         }}
     },
 

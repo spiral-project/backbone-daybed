@@ -211,11 +211,22 @@ Daybed.Definition = Daybed.BackboneModel.extend({
         }
     },
 
+    fields: function () {
+        return this.attributes.fields;
+    },
+
     /**
      * Fields names
      */
     fieldsNames: function () {
-        return _.pluck(this.attributes.fields, 'name');
+        return _.pluck(this.fields(), 'name');
+    },
+
+    fieldsLabels: function () {
+        return _.map(this.fields(), function (f) {
+            var capitalName = f.name.charAt(0).toUpperCase() + f.name.slice(1);
+            return f.label || capitalName;
+        });
     },
 
     /**
@@ -517,9 +528,9 @@ Daybed.TableView = Backbone.View.extend({
     rowView: Daybed.TableRowView,
 
     template: Mustache.compile('<thead>' +
-                               '{{#fields}}' +
-                               '  <th><span title="{{description}}">{{name}}</span></th>' +
-                               '{{/fields}}<th>Actions</th>' +
+                               '{{#fieldsLabels}}' +
+                               '  <th>{{ . }}</th>' +
+                               '{{/fieldsLabels}}<th>Actions</th>' +
                                '</thead><tbody></tbody>'),
 
     initialize: function () {
@@ -528,7 +539,7 @@ Daybed.TableView = Backbone.View.extend({
     },
 
     render: function () {
-        this.$el.html(this.template(this.collection.definition.attributes));
+        this.$el.html(this.template(this.collection.definition));
         return this;
     },
 

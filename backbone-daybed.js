@@ -173,6 +173,17 @@ Daybed.Definition = Daybed.BackboneModel.extend({
         }
     },
 
+    sync: function (method, model, options) {
+        if (method == 'read'){
+            options.url = model.url() + '/definition';
+        }
+        else {
+            options.url = model.url();
+            model.attributes = {definition: model.attributes};
+        }
+        return Daybed.BackboneModel.prototype.sync.call(this, method, model, options);
+    },
+
     save: function () {
         // Substitute meta types by daybed types
         _.each(this.attributes.fields, function (field) {
@@ -187,7 +198,7 @@ Daybed.Definition = Daybed.BackboneModel.extend({
 
     url: function () {
         return Daybed.SETTINGS.SERVER +
-               '/models/' + this.id + '/definition';
+               '/models/' + this.attributes.id;
     },
 
     /**

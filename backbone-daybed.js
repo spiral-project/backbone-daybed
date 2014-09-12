@@ -12,50 +12,52 @@ Daybed.SETTINGS = {
     SERVER: "http://localhost:8000"
 };
 
+// addHawkHeaders
+Daybed._addHawkHeaders = function(url, method) {
+  return function(xhr) {
+    if (!url)
+      return;
+
+    if (Daybed.SETTINGS.credentials &&
+        Daybed.SETTINGS.credentials.id &&
+        Daybed.SETTINGS.credentials.key &&
+        Daybed.SETTINGS.credentials.algorithm) {
+
+      var hawkHeader = hawk.client.header(url, method, {
+        credentials: Daybed.SETTINGS.credentials
+      });
+      xhr.setRequestHeader('Authorization', hawkHeader.field);
+    }
+  };
+};
+
+Daybed._sync = function(method, model, options) {
+  $.ajaxSetup({
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+
+  var url = options.url || _.result(model, 'url');
+
+  var methodMap = {
+    'create': 'POST',
+    'update': 'PUT',
+    'patch': 'PATCH',
+    'delete': 'DELETE',
+    'read': 'GET'
+  };
+
+  options.beforeSend = Daybed._addHawkHeaders(url, methodMap[method]);
+
+  return Backbone.sync.call(this, method, model, options);
+};
+
 //
 //  Base model for Hawk authentication
 //
 Daybed.BackboneModel = Backbone.Model.extend({
-
-  sync: function(method, model, options) {
-    $.ajaxSetup({
-        headers: {
-            'Accept': 'application/json'
-        }
-    });
-
-    var url = options.url || _.result(model, 'url');
-
-    var methodMap = {
-      'create': 'POST',
-      'update': 'PUT',
-      'patch': 'PATCH',
-      'delete': 'DELETE',
-      'read': 'GET'
-    };
-
-    options.beforeSend = this._addHawkHeaders(url, methodMap[method]);
-
-    return Backbone.sync.call(this, method, model, options);
-  },
-
-  _addHawkHeaders: function (url, method) {
-    return function(xhr) {
-      if (!url)
-        return;
-
-      if (Daybed.SETTINGS.credentials &&
-          Daybed.SETTINGS.credentials.id &&
-          Daybed.SETTINGS.credentials.key &&
-          Daybed.SETTINGS.credentials.algorithm) {
-
-        var hawkHeader = hawk.client.header(url, method, {
-          credentials: Daybed.SETTINGS.credentials
-        });
-        xhr.setRequestHeader('Authorization', hawkHeader.field);
-      }
-    };
-  }
+  sync: Daybed._sync
 });
 
 
@@ -114,7 +116,8 @@ Daybed.RecordList = Backbone.Collection.extend({
         var m = Backbone.Collection.prototype._prepareModel.apply(this, arguments);
         m.definition = this.definition;
         return m;
-    }
+    },
+    sync: Daybed._sync
 });
 
 
@@ -153,7 +156,7 @@ Daybed.Definition = Daybed.BackboneModel.extend({
             required: {
                 type: 'Checkbox',
                 editorAttrs: { 'checked' : 'checked' }
-            },
+            }
         }}
     },
 
@@ -179,7 +182,12 @@ Daybed.Definition = Daybed.BackboneModel.extend({
         }
         else {
             options.url = model.url();
-            model.attributes = {definition: model.attributes};
+            model.attributes = {definition: model.attributes,
+                                permissions: {Everyone: ['create_record',
+                                                         'delete_all_records',
+                                                         'read_all_records',
+                                                         'read_definition',
+                                                         'update_all_records']}};
         }
         return Daybed.BackboneModel.prototype.sync.call(this, method, model, options);
     },
@@ -197,8 +205,7 @@ Daybed.Definition = Daybed.BackboneModel.extend({
     },
 
     url: function () {
-        return Daybed.SETTINGS.SERVER +
-               '/models/' + this.attributes.id;
+        return Daybed.SETTINGS.SERVER + '/models/' + this.attributes.id;
     },
 
     /**

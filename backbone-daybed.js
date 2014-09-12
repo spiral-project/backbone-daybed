@@ -41,16 +41,16 @@ Daybed.BackboneModel = Backbone.Model.extend({
 
   _addHawkHeaders: function (url, method) {
     return function(xhr) {
-        if (!url)
-            return;
+      if (!url)
+        return;
 
-        if (Daybed.SETTINGS.credentials &&
-            Daybed.SETTINGS.credentials.id &&
-            Daybed.SETTINGS.credentials.key &&
-            Daybed.SETTINGS.credentials.algorithm) {
+      if (Daybed.SETTINGS.credentials &&
+          Daybed.SETTINGS.credentials.id &&
+          Daybed.SETTINGS.credentials.key &&
+          Daybed.SETTINGS.credentials.algorithm) {
 
-        var hawkHeader = hawk.client.header(method, url, {
-            credentials: Daybed.SETTINGS.credentials
+        var hawkHeader = hawk.client.header(url, method, {
+          credentials: Daybed.SETTINGS.credentials
         });
         xhr.setRequestHeader('Authorization', hawkHeader.field);
       }

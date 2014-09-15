@@ -3,7 +3,7 @@ function init() {
     //
     // By default, load todo model anonymously
     //
-    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org";
+    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org/v1";
 
     var hash = window.location.hash.slice(1) || 'todo';
     window.location.hash = hash;

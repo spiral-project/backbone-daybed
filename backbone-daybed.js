@@ -343,7 +343,8 @@ Daybed.FormView = Backbone.View.extend({
         }
 
         // Bind new instance to this form
-        this.instance = instance || this.instance || new this.model({});
+        instance = instance || new this.model({});
+        this.instance = instance || this.instance;
 
         this.instance.on('change', this.refresh, this);
         this.instance.on('sync', this.success, this);

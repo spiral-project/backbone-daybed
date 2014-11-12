@@ -1,0 +1,24 @@
+{
+    "definition": {
+        "description": "Daybed + React", 
+        "fields": [
+            {
+                "hint": "A set of characters", 
+                "label": "", 
+                "name": "item", 
+                "required": true, 
+                "type": "string"
+            }
+        ], 
+        "title": "todo"
+    }, 
+    "permissions": {
+        "Everyone": [
+            "create_record", 
+            "delete_own_records", 
+            "read_definition", 
+            "read_own_records", 
+            "update_own_records"
+        ]
+    }
+}

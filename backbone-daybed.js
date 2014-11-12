@@ -66,8 +66,7 @@ Daybed.BackboneModel = Backbone.Model.extend({
 //
 Daybed.Record = Daybed.BackboneModel.extend({
     urlRoot: function () {
-        return Daybed.SETTINGS.SERVER +
-               '/models/' + this.definition.id + '/records';
+        return this.definition.url() + '/records';
     },
 
     /**
@@ -91,8 +90,7 @@ Daybed.RecordList = Backbone.Collection.extend({
     },
 
     url: function () {
-        return Daybed.SETTINGS.SERVER +
-               '/models/' + this.definition.id + '/records';
+        return this.definition.url() + '/records';
     },
 
     parse: function (response) {

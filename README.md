@@ -49,7 +49,7 @@ set, connection will be anonymous.
 
 ```javascript
 
-    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org/v1";  // no trailing slash
+    Daybed.SETTINGS.SERVER = "https://daybed.io/v1";  // no trailing slash
 
     var credentials = window.location.hash.slice(1).split(':');
     Daybed.SETTINGS.credentials = {
@@ -64,7 +64,7 @@ Initalize form in ``<div>`` container :
 
 ```javascript
 
-    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org/v1";  // no trailing slash
+    Daybed.SETTINGS.SERVER = "https://daybed.io/v1";  // no trailing slash
     Daybed.SETTINGS.credentials = {  // Existing token
         id: "tokenId",               // (optional if not set
         key: "tokenKey",             // it will connect anonymously)

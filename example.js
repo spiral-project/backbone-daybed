@@ -3,18 +3,13 @@ function init() {
     //
     // By default, load todo model anonymously
     //
-    Daybed.SETTINGS.SERVER = "https://daybed.lolnet.org/v1";
+    Daybed.SETTINGS.SERVER = "https://daybed.io/v1";
 
-    var hash = window.location.hash.slice(1) || 'todo';
+    var hash = window.location.hash.slice(1) || 'daybed:examples:react:todo';
     window.location.hash = hash;
 
-    var credentials = hash.split(':');
-    var modelId = credentials[0];
-    Daybed.SETTINGS.credentials = {
-        id: credentials[1],
-        key: credentials[2],
-        algorithm: "sha256"
-    };
+    var modelId = hash;
+    Daybed.SETTINGS.credentials = undefined;
 
     //
     // Instantiate Models and Views
